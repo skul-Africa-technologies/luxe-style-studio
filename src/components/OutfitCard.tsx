@@ -14,12 +14,14 @@ const OutfitCard = ({ image, name, price, rating, index }: OutfitCardProps) => {
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
       className="group cursor-pointer"
+      style={{ willChange: "transform" }}
     >
       {/* Image container */}
-      <div className="relative overflow-hidden bg-secondary aspect-[3/4] mb-4">
+      <div className="relative overflow-hidden bg-secondary aspect-[3/4] mb-4 shadow-sm group-hover:shadow-xl transition-shadow duration-500">
         <img
           src={image}
           alt={name}
