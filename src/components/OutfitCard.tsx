@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface OutfitCardProps {
+  id: string;
   image: string;
   name: string;
   price: string;
@@ -9,7 +11,9 @@ interface OutfitCardProps {
   index: number;
 }
 
-const OutfitCard = ({ image, name, price, rating, index }: OutfitCardProps) => {
+const OutfitCard = ({ id, image, name, price, rating, index }: OutfitCardProps) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -19,6 +23,7 @@ const OutfitCard = ({ image, name, price, rating, index }: OutfitCardProps) => {
       viewport={{ once: true, margin: "-50px" }}
       className="group cursor-pointer"
       style={{ willChange: "transform" }}
+      onClick={() => navigate(`/outfit/${id}`)}
     >
       {/* Image container */}
       <div className="relative overflow-hidden bg-secondary aspect-[3/4] mb-4 shadow-sm group-hover:shadow-xl transition-shadow duration-500">
