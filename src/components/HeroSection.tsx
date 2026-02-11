@@ -29,10 +29,18 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.6 }}
-          className="font-display text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-light text-primary-foreground tracking-wide"
+          className="font-brand text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold text-primary-foreground tracking-[0.12em]"
         >
-          MAISON
+          MATTEEKAY
         </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.75 }}
+          className="font-brand text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-primary-foreground/90 tracking-[0.3em] mt-1"
+        >
+          FASHION
+        </motion.p>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -43,16 +51,29 @@ const HeroSection = () => {
           Where elegance meets the extraordinary
         </motion.p>
 
-        <motion.a
+      <motion.a
           href="#collection"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.03 }}
           transition={{ duration: 1, delay: 1.2 }}
           className="font-body text-xs tracking-[0.3em] uppercase px-10 py-4 border border-primary-foreground/60 text-primary-foreground hover:bg-primary-foreground hover:text-primary transition-all duration-500"
         >
           View Collection
         </motion.a>
       </div>
+
+      {/* Floating decorative elements */}
+      <motion.div
+        animate={{ y: [0, -15, 0], opacity: [0.15, 0.3, 0.15] }}
+        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+        className="absolute top-1/4 left-[10%] w-px h-32 bg-primary-foreground/20 hidden md:block"
+      />
+      <motion.div
+        animate={{ y: [0, 15, 0], opacity: [0.1, 0.25, 0.1] }}
+        transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+        className="absolute top-1/3 right-[8%] w-px h-24 bg-primary-foreground/20 hidden md:block"
+      />
 
       {/* Scroll indicator */}
       <motion.div

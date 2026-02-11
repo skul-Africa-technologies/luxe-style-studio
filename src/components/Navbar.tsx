@@ -20,8 +20,8 @@ const Navbar = () => {
       className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16 md:h-20">
-        <a href="#home" className="font-display text-2xl md:text-3xl font-semibold tracking-wider text-foreground">
-          MAISON
+        <a href="#home" className="font-brand text-xl md:text-2xl font-semibold tracking-[0.15em] text-foreground">
+          MATTEEKAY <span className="font-light">FASHION</span>
         </a>
 
         {/* Desktop nav */}

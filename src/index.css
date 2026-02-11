@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Outfit:wght@200;300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Outfit:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -48,6 +48,7 @@
     /* Custom luxury tokens */
     --font-display: 'Cormorant Garamond', serif;
     --font-body: 'Outfit', sans-serif;
+    --font-brand: 'Playfair Display', serif;
     --gold: 43 74% 49%;
     --gold-foreground: 0 0% 98%;
   }
@@ -113,5 +114,9 @@
 
   .text-gold {
     color: hsl(var(--gold));
+  }
+
+  .font-brand {
+    font-family: var(--font-brand);
   }
 }
