@@ -1,13 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, MessageCircle } from "lucide-react";
+import { ArrowLeft, Star, ShoppingBag, Check } from "lucide-react";
 import { outfits } from "@/data/outfits";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useCart } from "@/context/CartContext";
+import { useState } from "react";
 
 const OutfitDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addItem, openCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
+  
   const outfit = outfits.find((o) => o.id === id);
 
   if (!outfit) {
@@ -15,13 +20,30 @@ const OutfitDetail = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <h2 className="font-display text-3xl text-foreground">Outfit not found</h2>
-          <button onClick={() => navigate("/")} className="font-body text-sm tracking-wider text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => navigate("/#collection")}
+            className="font-body text-sm tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+          >
             ← Back to Collection
           </button>
         </div>
       </div>
     );
   }
+
+  const handleAddToCart = () => {
+    addItem({
+      id: outfit.id,
+      name: outfit.name,
+      price: outfit.price,
+      image: outfit.image,
+      category: outfit.category,
+      style: outfit.style,
+    });
+    
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
+  };
 
   const whatsappMessage = encodeURIComponent(
     `Hello MATTEEKAY FASHION, I want to purchase this outfit: ${outfit.name}. Price: ${outfit.price}`
@@ -116,21 +138,45 @@ const OutfitDetail = () => {
                 </div>
               </div>
 
-              {/* Purchase button */}
-              <motion.a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center gap-3 w-full py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase transition-opacity duration-300 hover:opacity-90"
-              >
-                <MessageCircle size={16} />
-                Order This Design
-              </motion.a>
+              {/* Action buttons */}
+              <div className="space-y-4">
+                <motion.button
+                  onClick={handleAddToCart}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center justify-center gap-3 w-full py-4 font-body text-xs tracking-[0.3em] uppercase transition-all duration-300 ${
+                    isAdded
+                      ? "bg-green-700 text-white"
+                      : "bg-foreground text-background hover:opacity-90"
+                  }`}
+                >
+                  {isAdded ? (
+                    <>
+                      <Check size={16} />
+                      Added to Cart
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag size={16} />
+                      Add to Cart
+                    </>
+                  )}
+                </motion.button>
+
+                <motion.a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center justify-center gap-3 w-full py-4 border border-foreground text-foreground font-body text-xs tracking-[0.3em] uppercase transition-opacity duration-300 hover:bg-foreground hover:text-background"
+                >
+                  Order via WhatsApp
+                </motion.a>
+              </div>
 
               <p className="font-body text-[11px] text-center text-muted-foreground tracking-wider">
-                You'll be redirected to WhatsApp to complete your order
+                Secure checkout available. Contact us for sizing inquiries.
               </p>
             </motion.div>
           </div>
