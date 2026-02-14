@@ -3,30 +3,112 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import OutfitDetail from "./pages/OutfitDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
+
+import Login from "./pages/admin/Login";
+import Dashboard from "./pages/admin/Dashboard";
+import AddItem from "./pages/admin/AddItem";
+import Orders from "./pages/admin/Orders";
+import Users from "./pages/admin/Users";
+import Settings from "./pages/admin/Settings";
+import Items from "./pages/admin/Items";
+
 import { CartProvider } from "@/context/CartContext";
+import { SessionProvider } from "@/context/SessionContext";
+
+import { AdminThemeProvider } from "./context/AdminThemeContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/outfit/:id" element={<OutfitDetail />} />
-            <Route path="/checkout" element={<Checkout />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
+      <SessionProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+
+          <BrowserRouter>
+            <Routes>
+              {/* ================= USER ROUTES ================= */}
+              <Route path="/" element={<Index />} />
+              <Route path="/outfit/:id" element={<OutfitDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+
+              {/* ================= ADMIN ROUTES ================= */}
+              <Route
+                path="/admin/login"
+                element={
+                  <AdminThemeProvider>
+                    <Login />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <AdminThemeProvider>
+                    <Dashboard />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/items"
+                element={
+                  <AdminThemeProvider>
+                    <Items />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/add-item"
+                element={
+                  <AdminThemeProvider>
+                    <AddItem />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/orders"
+                element={
+                  <AdminThemeProvider>
+                    <Orders />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminThemeProvider>
+                    <Users />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/settings"
+                element={
+                  <AdminThemeProvider>
+                    <Settings />
+                  </AdminThemeProvider>
+                }
+              />
+
+              {/* ================= FALLBACK ================= */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </SessionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

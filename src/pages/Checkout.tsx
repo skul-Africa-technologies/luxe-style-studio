@@ -4,39 +4,41 @@ import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useCart, OrderData } from "@/context/CartContext";
+import { useCart } from "@/context/CartContext";
 
 interface FormData {
   name: string;
   email: string;
   phone: string;
   note: string;
+  shippingAddress: string; // new field
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
   phone?: string;
+  shippingAddress?: string;
 }
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { state, subtotal, itemCount, clearCart, checkoutApi } = useCart();
-  const { items } = state;
-  
+  const { state, subtotal, itemCount, clearCart } = useCart();
+  const { items } = state; // removed userId
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     phone: "",
     note: "",
+    shippingAddress: "",
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
-  
-  // Redirect if cart is empty
+
   if (items.length === 0 && !isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -46,7 +48,9 @@ const Checkout = () => {
           className="text-center space-y-4"
         >
           <ShoppingBag size={48} className="mx-auto text-muted-foreground/30" />
-          <h2 className="font-display text-2xl text-foreground">Your cart is empty</h2>
+          <h2 className="font-display text-2xl text-foreground">
+            Your cart is empty
+          </h2>
           <button
             onClick={() => navigate("/#collection")}
             className="font-body text-sm tracking-wider text-muted-foreground hover:text-foreground transition-colors"
@@ -57,84 +61,94 @@ const Checkout = () => {
       </div>
     );
   }
-  
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
-    
+
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
       isValid = false;
     }
-    
+
     if (!formData.email.trim() && !formData.phone.trim()) {
       newErrors.email = "At least one contact method is required";
       newErrors.phone = "At least one contact method is required";
       isValid = false;
-    } else if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (
+      formData.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    ) {
       newErrors.email = "Please enter a valid email";
       isValid = false;
     }
-    
+
+    if (!formData.shippingAddress.trim()) {
+      newErrors.shippingAddress = "Shipping address is required";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when user starts typing
+
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+
+    if (!validateForm()) return;
+
     setIsSubmitting(true);
-    
+
     try {
-      const orderData: OrderData = {
-        items,
-        customer: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          note: formData.note,
-        },
+      const orderPayload = {
+        items: items.map((item) => ({
+          itemId: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: parseFloat(item.price.replace(/[^0-9.-]+/g, "")),
+        })),
+        total: subtotal,
+        shippingAddress: formData.shippingAddress,
+        notes: formData.note,
       };
-      
-      // TODO: Connect to checkout API
-      // const response = await checkoutApi(orderData);
-      const response = await checkoutApi(orderData);
-      
-      if (response.status === "success") {
-        setOrderId(response.orderId);
+
+      const response = await fetch("http://localhost:3001/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOrderId(data.orderId);
         setIsOrderPlaced(true);
         clearCart();
       } else {
-        throw new Error(response.message);
+        throw new Error(data.message || "Failed to place order");
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      // In a real app, you'd show an error toast here
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  // Order confirmation view
+
   if (isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        
         <motion.main
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -149,7 +163,6 @@ const Checkout = () => {
             >
               <CheckCircle size={40} />
             </motion.div>
-            
             <div className="space-y-2">
               <h1 className="font-display text-3xl md:text-4xl text-foreground">
                 Order Placed Successfully!
@@ -158,21 +171,20 @@ const Checkout = () => {
                 Thank you for your order, {formData.name}
               </p>
             </div>
-            
             <div className="p-6 bg-secondary/20 border border-border space-y-3">
               <p className="font-body text-sm text-muted-foreground">
-                Order ID: <span className="font-medium text-foreground">{orderId}</span>
+                Order ID:{" "}
+                <span className="font-medium text-foreground">{orderId}</span>
               </p>
               <p className="font-body text-sm text-muted-foreground">
                 A confirmation has been sent to your contact information.
               </p>
             </div>
-            
             <div className="space-y-4 pt-4">
               <p className="font-body text-base text-foreground">
-                MATTEEKAY FASHION will contact you shortly to confirm your order details and arrange delivery.
+                MATTEEKAY will contact you shortly to confirm your order
+                details and arrange delivery.
               </p>
-              
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -184,18 +196,15 @@ const Checkout = () => {
             </div>
           </div>
         </motion.main>
-        
         <Footer />
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
       <main className="pt-24 md:pt-28 pb-24">
-        {/* Back button */}
         <div className="max-w-6xl mx-auto px-6 md:px-12 pb-8">
           <motion.button
             initial={{ opacity: 0, x: -10 }}
@@ -208,7 +217,6 @@ const Checkout = () => {
             Back
           </motion.button>
         </div>
-        
         <div className="max-w-6xl mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
             {/* Checkout Form */}
@@ -220,7 +228,6 @@ const Checkout = () => {
               <h1 className="font-display text-3xl md:text-4xl font-light text-foreground mb-8">
                 Checkout
               </h1>
-              
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Name */}
                 <div className="space-y-2">
@@ -240,10 +247,11 @@ const Checkout = () => {
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
                   />
                   {errors.name && (
-                    <p className="font-body text-xs text-destructive">{errors.name}</p>
+                    <p className="font-body text-xs text-destructive">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
-                
                 {/* Email */}
                 <div className="space-y-2">
                   <label
@@ -262,10 +270,11 @@ const Checkout = () => {
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
                   />
                   {errors.email && (
-                    <p className="font-body text-xs text-destructive">{errors.email}</p>
+                    <p className="font-body text-xs text-destructive">
+                      {errors.email}
+                    </p>
                   )}
                 </div>
-                
                 {/* Phone */}
                 <div className="space-y-2">
                   <label
@@ -284,10 +293,34 @@ const Checkout = () => {
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
                   />
                   {errors.phone && (
-                    <p className="font-body text-xs text-destructive">{errors.phone}</p>
+                    <p className="font-body text-xs text-destructive">
+                      {errors.phone}
+                    </p>
                   )}
                 </div>
-                
+                {/* Shipping Address */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="shippingAddress"
+                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
+                  >
+                    Shipping Address *
+                  </label>
+                  <textarea
+                    id="shippingAddress"
+                    name="shippingAddress"
+                    value={formData.shippingAddress}
+                    onChange={handleInputChange}
+                    placeholder="Enter your shipping address"
+                    rows={3}
+                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50 resize-none"
+                  />
+                  {errors.shippingAddress && (
+                    <p className="font-body text-xs text-destructive">
+                      {errors.shippingAddress}
+                    </p>
+                  )}
+                </div>
                 {/* Note */}
                 <div className="space-y-2">
                   <label
@@ -306,8 +339,7 @@ const Checkout = () => {
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50 resize-none"
                   />
                 </div>
-                
-                {/* Submit button */}
+                {/* Submit */}
                 <motion.button
                   type="submit"
                   disabled={isSubmitting}
@@ -324,13 +356,13 @@ const Checkout = () => {
                     "Place Order"
                   )}
                 </motion.button>
-                
                 <p className="font-body text-[11px] text-center text-muted-foreground tracking-wider">
-                  By placing your order, you agree to receive communication from MATTEEKAY FASHION
+                  By placing your order, you agree to receive communication from
+                  MATTEEKAY 
                 </p>
               </form>
             </motion.div>
-            
+
             {/* Order Summary */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -342,8 +374,6 @@ const Checkout = () => {
                 <h2 className="font-display text-xl text-foreground mb-6">
                   Order Summary
                 </h2>
-                
-                {/* Items */}
                 <div className="space-y-4 mb-6">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-4">
@@ -362,14 +392,16 @@ const Checkout = () => {
                           Qty: {item.quantity}
                         </p>
                         <p className="font-body text-sm font-medium text-foreground mt-1">
-                          ${(parseFloat(item.price.replace(/[^0-9.-]+/g, "")) * item.quantity).toLocaleString()}
+                          $
+                          {(
+                            parseFloat(item.price.replace(/[^0-9.-]+/g, "")) *
+                            item.quantity
+                          ).toLocaleString()}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
-                
-                {/* Totals */}
                 <div className="border-t border-border pt-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
@@ -402,7 +434,6 @@ const Checkout = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

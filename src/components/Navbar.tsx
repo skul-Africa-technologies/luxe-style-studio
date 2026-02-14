@@ -25,7 +25,7 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16 md:h-20">
           <a href="#home" className="font-brand text-xl md:text-2xl font-semibold tracking-[0.15em] text-foreground">
-            MATTEEKAY <span className="font-light">FASHION</span>
+            MATTEEKAY <span className="font-light"></span>
           </a>
 
           {/* Desktop nav */}

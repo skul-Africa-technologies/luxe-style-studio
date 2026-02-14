@@ -1,27 +1,89 @@
-import outfit1 from "@/assets/outfit-1.jpg";
-import outfit2 from "@/assets/outfit-2.jpg";
-import outfit3 from "@/assets/outfit-3.jpg";
-import outfit4 from "@/assets/outfit-4.jpg";
-import outfit5 from "@/assets/outfit-5.jpg";
-import outfit6 from "@/assets/outfit-6.jpg";
+import axios from "axios";
 
 export interface Outfit {
   id: string;
-  image: string;
   name: string;
   price: string;
+  image: string;
   rating: number;
   description: string;
-  fabric: string;
-  style: string;
+  fabric?: string;
+  style?: string;
   category: string;
 }
 
-export const outfits: Outfit[] = [
-  { id: "noir-satin-gown", image: outfit1, name: "Noir Satin Gown", price: "$4,200", rating: 5, description: "A breathtaking floor-length gown crafted from the finest Italian satin. The flowing silhouette drapes effortlessly, creating an aura of timeless sophistication perfect for black-tie events.", fabric: "Italian Satin", style: "Evening Gown", category: "Women" },
-  { id: "ivory-tailored-suit", image: outfit2, name: "Ivory Tailored Suit", price: "$3,800", rating: 4, description: "Precision-cut ivory suit featuring a structured blazer with peak lapels and slim-fit trousers. A modern take on classic tailoring that commands attention.", fabric: "Wool Blend", style: "Tailored Suit", category: "Unisex" },
-  { id: "gold-silk-drape", image: outfit3, name: "Gold Silk Drape", price: "$5,600", rating: 5, description: "Luxurious gold silk cascades in artful drapes, catching light with every movement. An opulent masterpiece that embodies the essence of haute couture.", fabric: "Pure Silk", style: "Draped Dress", category: "Women" },
-  { id: "structured-blazer", image: outfit4, name: "Structured Blazer", price: "$2,900", rating: 4, description: "Architectural lines meet premium craftsmanship in this statement blazer. Double-breasted with horn buttons and a sculpted shoulder for a powerful silhouette.", fabric: "Cashmere Blend", style: "Blazer", category: "Unisex" },
-  { id: "classic-trench", image: outfit5, name: "Classic Trench", price: "$3,200", rating: 5, description: "The quintessential trench coat reimagined with luxurious detailing. Water-resistant gabardine with hand-stitched seams and signature belt closure.", fabric: "Cotton Gabardine", style: "Outerwear", category: "Unisex" },
-  { id: "sequin-evening-dress", image: outfit6, name: "Sequin Evening Dress", price: "$6,100", rating: 5, description: "Thousands of hand-sewn micro-sequins create a mesmerizing shimmer. This body-conscious silhouette celebrates the art of evening glamour.", fabric: "Sequined Tulle", style: "Evening Dress", category: "Women" },
-];
+export interface ApiItem {
+  _id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  description: string;
+  category: string;
+  fabric?: string;
+  style?: string;
+}
+
+export interface ApiResponse {
+  data: ApiItem[];
+  success: boolean;
+  message?: string;
+}
+
+const API_URL = "http://localhost:3001/items";
+
+export const fetchOutfits = async (): Promise<Outfit[]> => {
+  try {
+    const response = await axios.get<ApiResponse>(API_URL, {
+      params: { page: 1, limit: 20 },
+    });
+
+    if (!response.data.success || !Array.isArray(response.data.data)) {
+      throw new Error("Invalid API response format");
+    }
+
+    return response.data.data.map((item: ApiItem): Outfit => ({
+      id: item._id,
+      name: item.name,
+      price: `$${item.price.toFixed(2)}`,
+      image: item.imageUrl,
+      rating: Math.floor(Math.random() * 5) + 1,
+      description: item.description,
+      fabric: item.fabric,
+      style: item.style,
+      category: item.category,
+    }));
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Fetch error:", error.message);
+      throw new Error("Failed to fetch items. Is backend running on port 3001?");
+    }
+    throw error;
+  }
+};
+
+export const fetchOutfitById = async (id: string): Promise<Outfit | null> => {
+  try {
+    const response = await axios.get<ApiResponse>(`${API_URL}/${id}`);
+
+    if (!response.data.success || !response.data.data) {
+      return null;
+    }
+
+    const item: ApiItem = response.data.data as unknown as ApiItem;
+
+    return {
+      id: item._id,
+      name: item.name,
+      price: `$${item.price.toFixed(2)}`,
+      image: item.imageUrl,
+      rating: Math.floor(Math.random() * 5) + 1,
+      description: item.description,
+      fabric: item.fabric,
+      style: item.style,
+      category: item.category,
+    };
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return null;
+  }
+};

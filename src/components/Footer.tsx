@@ -53,7 +53,7 @@ const Footer = () => {
       {/* Static full-width background logo */}
       <img
         src="/logo.PNG"
-        alt="Matteekay Fashion Logo"
+        alt="Matteekay Logo"
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-full opacity-10 select-none pointer-events-none"
         style={{ zIndex: 0 }}
       />
@@ -66,15 +66,12 @@ const Footer = () => {
             <div className="rounded-full border-4 border-primary-foreground p-6 flex items-center justify-center mb-4 overflow-hidden">
               <img
                 src="/logo.PNG" // Make sure your logo is in public/logo.PNG
-                alt="Matteekay Fashion Logo"
+                alt="Matteekay Logo"
                 className="w-20 h-20 md:w-28 md:h-28 object-cover"
               />
             </div>
 
-            <p className="font-body text-sm leading-relaxed text-primary-foreground/60 max-w-xs text-center md:text-left">
-              Where elegance meets the extraordinary. Crafting timeless couture
-              for the modern connoisseur.
-            </p>
+       
           </div>
 
           {/* Navigation */}
@@ -120,7 +117,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-primary-foreground/10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="font-body text-xs tracking-wider text-primary-foreground/40">
-            © 2026 Matteekay Fashion. All rights reserved.
+            © 2026 Matteekay . All rights reserved.
           </span>
           <span className="font-body text-xs tracking-wider text-primary-foreground/30">
             Crafted with passion
