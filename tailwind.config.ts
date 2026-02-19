@@ -14,9 +14,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Cormorant Garamond'", "serif"],
-        body: ["'Outfit'", "sans-serif"],
-        brand: ["'Playfair Display'", "serif"],
+        sans: ["'Inter'", "'Helvetica Neue'", "Arial", "sans-serif"],
+        serif: ["'Playfair Display'", "'Georgia'", "serif"],
+        display: ["'Playfair Display'", "'Georgia'", "serif"],
+        body: ["'Inter'", "'Helvetica Neue'", "Arial", "sans-serif"],
+        brand: ["'Playfair Display'", "'Georgia'", "serif"],
+        heading: ["'Playfair Display'", "'Georgia'", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",

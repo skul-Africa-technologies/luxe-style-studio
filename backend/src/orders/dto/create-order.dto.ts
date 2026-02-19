@@ -28,6 +28,21 @@ export class CreateOrderDto {
   @IsString()
   userId?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @ApiProperty({ type: [OrderItemDto] })
   @IsArray()
   @ValidateNested({ each: true })
@@ -43,6 +58,26 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   shippingAddress?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  deliveryAddress?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  deliveryLat?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  deliveryLng?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  googleMapsLink?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

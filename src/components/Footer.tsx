@@ -62,18 +62,7 @@ const Footer = () => {
         {/* Main footer content */}
         <div className="py-16 md:py-20 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
           {/* Brand with rounded logo */}
-          <div className="space-y-4 flex flex-col items-center md:items-start">
-            <div className="rounded-full border-4 border-primary-foreground p-6 flex items-center justify-center mb-4 overflow-hidden">
-              <img
-                src="/logo.PNG" // Make sure your logo is in public/logo.PNG
-                alt="Matteekay Logo"
-                className="w-20 h-20 md:w-28 md:h-28 object-cover"
-              />
-            </div>
-
-       
-          </div>
-
+        
           {/* Navigation */}
           <div className="space-y-4">
             <h4 className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40">

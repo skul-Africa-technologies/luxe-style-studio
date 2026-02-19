@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Filter, MoreHorizontal, Calendar, MapPin, Package } from "lucide-react";
+import { Search, Filter, MoreHorizontal, Calendar, MapPin, Package, User, Mail, Phone } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,14 @@ interface Order {
   items: OrderItem[];
   total: number;
   status: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   shippingAddress: string;
+  deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
+  googleMapsLink?: string;
   notes: string;
   createdAt: string;
 }
@@ -58,7 +65,14 @@ interface DisplayOrder {
   total: number;
   status: string;
   statusDisplay: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   shippingAddress: string;
+  deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
+  googleMapsLink?: string;
   notes: string;
   createdAt: string;
   date: string;
@@ -280,6 +294,7 @@ const Orders = () => {
                   <TableHeader>
                     <TableRow className="border-border">
                       <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Order ID</TableHead>
+                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Customer</TableHead>
                       <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Date</TableHead>
                       <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Status</TableHead>
                       <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Items</TableHead>
@@ -292,6 +307,14 @@ const Orders = () => {
                       <TableRow key={order._id} className="border-border hover:bg-muted/50 transition-colors">
                         <TableCell className="font-body text-sm text-foreground font-mono">
                           {order._id.slice(-8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="font-body text-sm text-foreground">
+                          <div className="space-y-0.5">
+                            <p className="font-medium">{order.customerName || "—"}</p>
+                            {order.customerEmail && (
+                              <p className="text-xs text-muted-foreground">{order.customerEmail}</p>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="font-body text-sm text-foreground">
                           {order.date}
@@ -382,6 +405,33 @@ const Orders = () => {
 
             {selectedOrder && (
               <div className="space-y-6">
+                {/* Customer Info Card */}
+                {(selectedOrder.customerName || selectedOrder.customerEmail || selectedOrder.customerPhone) && (
+                  <Card className="border-border bg-muted/30">
+                    <CardContent className="pt-6 space-y-3">
+                      <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Customer Information</h4>
+                      {selectedOrder.customerName && (
+                        <div className="flex items-center gap-2 text-foreground">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-body text-sm font-medium">{selectedOrder.customerName}</span>
+                        </div>
+                      )}
+                      {selectedOrder.customerEmail && (
+                        <div className="flex items-center gap-2 text-foreground">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${selectedOrder.customerEmail}`} className="font-body text-sm hover:underline">{selectedOrder.customerEmail}</a>
+                        </div>
+                      )}
+                      {selectedOrder.customerPhone && (
+                        <div className="flex items-center gap-2 text-foreground">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a href={`tel:${selectedOrder.customerPhone}`} className="font-body text-sm hover:underline">{selectedOrder.customerPhone}</a>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Order Info Card */}
                 <Card className="border-border bg-muted/30">
                   <CardContent className="pt-6 space-y-4">
@@ -403,6 +453,44 @@ const Orders = () => {
                       <MapPin className="h-4 w-4" />
                       <span className="font-body text-sm">{selectedOrder.shippingAddress}</span>
                     </div>
+
+                    {/* Delivery Location with Map */}
+                    {selectedOrder.deliveryAddress && (
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="h-4 w-4 text-foreground" />
+                          <span className="font-body text-sm font-medium text-foreground">Delivery Location</span>
+                        </div>
+                        <p className="font-body text-sm text-foreground pl-6">
+                          {selectedOrder.deliveryAddress}
+                        </p>
+                        {selectedOrder.deliveryLat && selectedOrder.deliveryLng && (
+                          <div className="rounded-lg overflow-hidden border border-border">
+                            <iframe
+                              src={`https://www.google.com/maps?q=${selectedOrder.deliveryLat},${selectedOrder.deliveryLng}&output=embed`}
+                              width="100%"
+                              height="200"
+                              style={{ border: 0 }}
+                              allowFullScreen
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              title="Delivery Location Map"
+                            />
+                          </div>
+                        )}
+                        {selectedOrder.googleMapsLink && (
+                          <a
+                            href={selectedOrder.googleMapsLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 font-body text-xs tracking-[0.1em] uppercase text-foreground hover:text-muted-foreground transition-colors pl-6"
+                          >
+                            <MapPin className="h-3 w-3" />
+                            Open in Google Maps →
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {selectedOrder.notes && (
                       <div className="p-3 rounded-lg bg-muted/50">

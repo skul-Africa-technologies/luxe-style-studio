@@ -23,6 +23,15 @@ export class Order extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', nullable: true })
   userId?: Types.ObjectId;
 
+  @Prop()
+  fullName?: string;
+
+  @Prop()
+  email?: string;
+
+  @Prop()
+  phone?: string;
+
   @Prop({ type: [OrderItemSchema], required: true })
   items: OrderItem[];
 
@@ -35,8 +44,17 @@ export class Order extends Document {
   @Prop()
   shippingAddress?: string;
 
-    @Prop()
-  shippingLocation?: string;
+  @Prop()
+  deliveryAddress?: string;
+
+  @Prop()
+  deliveryLat?: number;
+
+  @Prop()
+  deliveryLng?: number;
+
+  @Prop()
+  googleMapsLink?: string;
 
   @Prop()
   notes?: string;

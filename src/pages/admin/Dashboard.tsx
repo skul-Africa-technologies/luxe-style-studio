@@ -32,14 +32,24 @@ import {
 
 /* ---------------- TYPES ---------------- */
 
+interface OrderItem {
+  itemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 interface RecentOrder {
   _id: string;
+  fullName: string;
+  email: string;
+  phone: string;
   total: number;
   status: string;
-  user?: {
-    name?: string;
-    email?: string;
-  };
+  items: OrderItem[];
+  deliveryAddress: string;
+  googleMapsLink: string;
+  shippingAddress: string;
 }
 
 interface DashboardData {
@@ -230,6 +240,10 @@ const Dashboard = () => {
                     <TableRow>
                       <TableHead>Order ID</TableHead>
                       <TableHead>Customer</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead>Delivery Address</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
@@ -238,7 +252,7 @@ const Dashboard = () => {
                   <TableBody>
                     {data.recentOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center">
+                        <TableCell colSpan={8} className="text-center">
                           No recent orders found.
                         </TableCell>
                       </TableRow>
@@ -248,9 +262,31 @@ const Dashboard = () => {
                           <TableCell>{order._id.slice(0, 8)}...</TableCell>
 
                           <TableCell>
-                            {order.user?.name ||
-                              order.user?.email ||
-                              "Unknown"}
+                            {order.fullName || order.email || "Unknown"}
+                          </TableCell>
+
+                          <TableCell>{order.email || "-"}</TableCell>
+
+                          <TableCell>{order.phone || "-"}</TableCell>
+
+                          <TableCell>
+                            {order.items?.length || 0} item(s)
+                          </TableCell>
+
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={order.deliveryAddress}>
+                              {order.deliveryAddress || order.shippingAddress || "-"}
+                            </div>
+                            {order.googleMapsLink && (
+                              <a
+                                href={order.googleMapsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-500 hover:underline"
+                              >
+                                View Map
+                              </a>
+                            )}
                           </TableCell>
 
                           <TableCell>
