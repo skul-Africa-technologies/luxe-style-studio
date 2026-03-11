@@ -32,6 +32,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// User type from populated userId
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+}
+
 // Order item type from backend
 interface OrderItem {
   name: string;
@@ -43,12 +55,13 @@ interface OrderItem {
 // Full order type from backend
 interface Order {
   _id: string;
+  userId?: User;
   items: OrderItem[];
   total: number;
   status: string;
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
   shippingAddress: string;
   deliveryAddress?: string;
   deliveryLat?: number;
@@ -61,13 +74,14 @@ interface Order {
 // Display order type (with computed fields)
 interface DisplayOrder {
   _id: string;
+  userId?: User;
   items: OrderItem[];
   total: number;
   status: string;
   statusDisplay: string;
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
+  fullName: string;
+  email: string;
+  phone: string;
   shippingAddress: string;
   deliveryAddress?: string;
   deliveryLat?: number;
@@ -82,8 +96,11 @@ interface DisplayOrder {
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "completed":
+    case "delivered":
       return "bg-green-500/10 text-green-500";
     case "processing":
+    case "shipped":
+    case "paid":
       return "bg-blue-500/10 text-blue-500";
     case "pending":
       return "bg-yellow-500/10 text-yellow-500";
@@ -97,8 +114,9 @@ const getStatusColor = (status: string) => {
 // Get next status in workflow
 const getNextStatus = (currentStatus: string): string | null => {
   const statusFlow: Record<string, string> = {
-    pending: "processing",
-    processing: "completed",
+    pending: "paid",
+    paid: "shipped",
+    shipped: "delivered",
   };
   return statusFlow[currentStatus.toLowerCase()] || null;
 };
@@ -126,11 +144,19 @@ const Orders = () => {
 
       const mappedOrders: DisplayOrder[] = (data.data || []).map((o: Order) => ({
         _id: o._id,
+        userId: o.userId,
         items: o.items || [],
         total: o.total || 0,
         status: o.status,
         statusDisplay: o.status.charAt(0).toUpperCase() + o.status.slice(1),
+        fullName: o.userId?.name || o.fullName || "Unknown",
+        email: o.userId?.email || o.email || "N/A",
+        phone: o.userId?.phone || o.phone || "N/A",
         shippingAddress: o.shippingAddress || "N/A",
+        deliveryAddress: o.deliveryAddress,
+        deliveryLat: o.deliveryLat,
+        deliveryLng: o.deliveryLng,
+        googleMapsLink: o.googleMapsLink,
         notes: o.notes || "",
         createdAt: o.createdAt,
         date: new Date(o.createdAt).toLocaleDateString("en-US", {
@@ -159,6 +185,8 @@ const Orders = () => {
     const filtered = orders.filter(
       (order) =>
         order._id.toLowerCase().includes(term) ||
+        order.fullName.toLowerCase().includes(term) ||
+        order.email.toLowerCase().includes(term) ||
         order.shippingAddress.toLowerCase().includes(term)
     );
     setFilteredOrders(filtered);
@@ -250,7 +278,7 @@ const Orders = () => {
               <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by Order ID or Customer Address..."
+                  placeholder="Search by Order ID, Customer Name, or Address..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 font-body text-sm"
@@ -310,10 +338,8 @@ const Orders = () => {
                         </TableCell>
                         <TableCell className="font-body text-sm text-foreground">
                           <div className="space-y-0.5">
-                            <p className="font-medium">{order.customerName || "—"}</p>
-                            {order.customerEmail && (
-                              <p className="text-xs text-muted-foreground">{order.customerEmail}</p>
-                            )}
+                            <p className="font-medium">{order.fullName}</p>
+                            <p className="text-xs text-muted-foreground">{order.email}</p>
                           </div>
                         </TableCell>
                         <TableCell className="font-body text-sm text-foreground">
@@ -357,7 +383,7 @@ const Orders = () => {
                                   {actionLoading === order._id ? "Updating..." : `Mark as ${getNextStatus(order.status)}`}
                                 </DropdownMenuItem>
                               )}
-                              {order.status.toLowerCase() !== "cancelled" && order.status.toLowerCase() !== "completed" && (
+                              {order.status.toLowerCase() !== "cancelled" && order.status.toLowerCase() !== "completed" && order.status.toLowerCase() !== "delivered" && (
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => handleCancelOrder(order._id)}
@@ -406,31 +432,29 @@ const Orders = () => {
             {selectedOrder && (
               <div className="space-y-6">
                 {/* Customer Info Card */}
-                {(selectedOrder.customerName || selectedOrder.customerEmail || selectedOrder.customerPhone) && (
-                  <Card className="border-border bg-muted/30">
-                    <CardContent className="pt-6 space-y-3">
-                      <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Customer Information</h4>
-                      {selectedOrder.customerName && (
-                        <div className="flex items-center gap-2 text-foreground">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-body text-sm font-medium">{selectedOrder.customerName}</span>
-                        </div>
-                      )}
-                      {selectedOrder.customerEmail && (
-                        <div className="flex items-center gap-2 text-foreground">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${selectedOrder.customerEmail}`} className="font-body text-sm hover:underline">{selectedOrder.customerEmail}</a>
-                        </div>
-                      )}
-                      {selectedOrder.customerPhone && (
-                        <div className="flex items-center gap-2 text-foreground">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <a href={`tel:${selectedOrder.customerPhone}`} className="font-body text-sm hover:underline">{selectedOrder.customerPhone}</a>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="border-border bg-muted/30">
+                  <CardContent className="pt-6 space-y-3">
+                    <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Customer Information</h4>
+                    {selectedOrder.fullName && (
+                      <div className="flex items-center gap-2 text-foreground">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-body text-sm font-medium">{selectedOrder.fullName}</span>
+                      </div>
+                    )}
+                    {selectedOrder.email && selectedOrder.email !== "N/A" && (
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <a href={`mailto:${selectedOrder.email}`} className="font-body text-sm hover:underline">{selectedOrder.email}</a>
+                      </div>
+                    )}
+                    {selectedOrder.phone && selectedOrder.phone !== "N/A" && (
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <a href={`tel:${selectedOrder.phone}`} className="font-body text-sm hover:underline">{selectedOrder.phone}</a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* Order Info Card */}
                 <Card className="border-border bg-muted/30">
@@ -501,66 +525,31 @@ const Orders = () => {
                   </CardContent>
                 </Card>
 
-                {/* Order Items */}
-                <div>
-                  <h4 className="font-brand text-lg mb-3">Ordered Items</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border">
-                        <TableHead className="font-body text-xs uppercase tracking-[0.05em] text-muted-foreground">Item</TableHead>
-                        <TableHead className="font-body text-xs uppercase tracking-[0.05em] text-muted-foreground text-center">Qty</TableHead>
-                        <TableHead className="font-body text-xs uppercase tracking-[0.05em] text-muted-foreground text-right">Price</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedOrder.items.map((item, index) => (
-                        <TableRow key={index} className="border-border">
-                          <TableCell className="font-body text-sm text-foreground">
-                            {item.name}
-                          </TableCell>
-                          <TableCell className="font-body text-sm text-foreground text-center">
-                            {item.quantity}
-                          </TableCell>
-                          <TableCell className="font-body text-sm text-foreground text-right">
-                            ${item.price.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  {/* Total */}
-                  <div className="flex items-center justify-end mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <span className="font-body text-sm text-muted-foreground">Total:</span>
-                      <span className="font-brand text-xl font-semibold text-foreground">
+                {/* Order Items Card */}
+                <Card className="border-border bg-muted/30">
+                  <CardContent className="pt-6 space-y-3">
+                    <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Order Items</h4>
+                    {selectedOrder.items.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div className="flex-1">
+                          <p className="font-body text-sm text-foreground">{item.name}</p>
+                          <p className="font-body text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-body text-sm font-medium text-foreground">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <span className="font-body text-sm font-medium text-foreground">Total</span>
+                      <span className="font-display text-lg font-medium text-foreground">
                         ${selectedOrder.total.toFixed(2)}
                       </span>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-                className="font-body text-xs uppercase tracking-[0.1em]"
-              >
-                Close
-              </Button>
-              {selectedOrder && selectedOrder.status.toLowerCase() !== "cancelled" && selectedOrder.status.toLowerCase() !== "completed" && (
-                <Button
-                  variant="destructive"
-                  onClick={() => handleCancelOrder(selectedOrder._id)}
-                  disabled={actionLoading === selectedOrder._id}
-                  className="font-body text-xs uppercase tracking-[0.1em]"
-                >
-                  {actionLoading === selectedOrder._id ? "Cancelling..." : "Cancel Order"}
-                </Button>
-              )}
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </AdminLayout>

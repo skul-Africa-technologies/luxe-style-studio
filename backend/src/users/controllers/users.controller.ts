@@ -1,5 +1,5 @@
 import { Controller, Get, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
@@ -17,10 +17,12 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all users', description: 'Retrieve paginated list of users' })
+  @ApiOperation({ summary: 'Get all users', description: 'Retrieve paginated list of users with order counts' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   @ApiResponse({ status: 200, description: 'List of users' })
   async findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.usersService.findAll(page ? Number(page) : 1, limit ? Number(limit) : 10);
+    return this.usersService.findAllWithOrderCounts(page ? Number(page) : 1, limit ? Number(limit) : 10);
   }
 
   @Get(':id')
@@ -28,7 +30,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User details' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+    return this.usersService.findOneWithOrderCount(id);
   }
 
   @Patch(':id')

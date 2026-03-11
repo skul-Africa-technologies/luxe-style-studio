@@ -7,9 +7,24 @@ export class User extends Document {
   email: string;
 
   @Prop()
-  name?: string;
+  name: string;
 
-  @Prop({ default: 'user' })
+  @Prop()
+  phone: string;
+
+  @Prop()
+  address: string;
+
+  @Prop()
+  city: string;
+
+  @Prop()
+  country: string;
+
+  @Prop()
+  postalCode: string;
+
+  @Prop({ default: 'customer' })
   role: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Order' }], default: [] })

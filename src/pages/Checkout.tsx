@@ -11,7 +11,7 @@ interface FormData {
   email: string;
   phone: string;
   note: string;
-  shippingAddress: string; // new field
+  shippingAddress: string;
 }
 
 interface FormErrors {
@@ -24,7 +24,7 @@ interface FormErrors {
 const Checkout = () => {
   const navigate = useNavigate();
   const { state, subtotal, itemCount, clearCart } = useCart();
-  const { items } = state; // removed userId
+  const { items } = state;
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -112,6 +112,11 @@ const Checkout = () => {
 
     try {
       const orderPayload = {
+        fullName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        shippingAddress: formData.shippingAddress,
+        notes: formData.note,
         items: items.map((item) => ({
           itemId: item.id,
           name: item.name,
@@ -119,8 +124,6 @@ const Checkout = () => {
           price: parseFloat(item.price.replace(/[^0-9.-]+/g, "")),
         })),
         total: subtotal,
-        shippingAddress: formData.shippingAddress,
-        notes: formData.note,
       };
 
       const response = await fetch("http://localhost:3001/orders", {
@@ -132,7 +135,7 @@ const Checkout = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setOrderId(data.orderId);
+        setOrderId(data._id || data.orderId || "Order");
         setIsOrderPlaced(true);
         clearCart();
       } else {
