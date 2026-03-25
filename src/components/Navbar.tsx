@@ -27,6 +27,7 @@ const Navbar = () => {
           <a
             href="#home"
             className="font-brand text-2xl md:text-3xl font-bold tracking-[0.2em] text-foreground uppercase"
+            style={{ fontFamily: 'Cormorant Garamond, serif' }}
           >
             MATTEEKAY
           </a>

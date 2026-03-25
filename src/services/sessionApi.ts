@@ -6,19 +6,47 @@ import type {
   ActivitySaveRequest,
   TransactionSaveRequest,
   ApiResponse,
-  PaginatedResponse,
 } from '@/types/session';
 
+// ====================
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// ====================
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-// Generic fetch wrapper with error handling
+if (!API_BASE_URL) {
+  throw new Error(
+    'VITE_API_BASE_URL is not defined. Please set it in your .env file.'
+  );
+}
+
+// ====================
+// Helpers
+// ====================
+
+// Prevent double slashes in URLs
+function buildUrl(endpoint: string): string {
+  return `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
+}
+
+// Simple in-memory cache
+const cache = new Map<string, unknown>();
+
+// ====================
+// Generic Fetch Wrapper
+// ====================
 async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
+  const url = buildUrl(endpoint);
+
+  const isGet = !options.method || options.method === 'GET';
+
+  // ✅ Return cached data instantly
+  if (isGet && cache.has(url)) {
+    return { success: true, data: cache.get(url) as T };
+  }
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -37,6 +65,12 @@ async function fetchApi<T>(
     }
 
     const data = await response.json();
+
+    // ✅ Cache GET responses
+    if (isGet) {
+      cache.set(url, data);
+    }
+
     return { success: true, data };
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);
@@ -47,19 +81,18 @@ async function fetchApi<T>(
   }
 }
 
-// User API Functions
+// ====================
+// User API
+// ====================
 export const userApi = {
-  // Get all users
   async getAllUsers(): Promise<ApiResponse<User[]>> {
     return fetchApi<User[]>('/users');
   },
 
-  // Get single user by ID
   async getUserById(id: string): Promise<ApiResponse<User>> {
     return fetchApi<User>(`/users/${id}`);
   },
 
-  // Get user by email
   async getUserByEmail(email: string): Promise<ApiResponse<User | null>> {
     const response = await this.getAllUsers();
     if (response.success && response.data) {
@@ -69,15 +102,16 @@ export const userApi = {
     return { success: false, error: response.error || 'User not found' };
   },
 
-  // Create or update user (PATCH /users/{id})
-  async createOrUpdateUser(id: string, email: string): Promise<ApiResponse<User>> {
+  async createOrUpdateUser(
+    id: string,
+    email: string
+  ): Promise<ApiResponse<User>> {
     return fetchApi<User>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ email }),
     });
   },
 
-  // Delete user
   async deleteUser(id: string): Promise<ApiResponse<void>> {
     return fetchApi<void>(`/users/${id}`, {
       method: 'DELETE',
@@ -85,22 +119,25 @@ export const userApi = {
   },
 };
 
-// Activity API Functions
+// ====================
+// Activity API
+// ====================
 export const activityApi = {
-  // Get user activities
-  async getUserActivities(userId: string): Promise<ApiResponse<UserActivity[]>> {
+  async getUserActivities(
+    userId: string
+  ): Promise<ApiResponse<UserActivity[]>> {
     return fetchApi<UserActivity[]>(`/users/${userId}/activities`);
   },
 
-  // Save activity asynchronously
-  async saveActivity(request: ActivitySaveRequest): Promise<ApiResponse<UserActivity>> {
+  async saveActivity(
+    request: ActivitySaveRequest
+  ): Promise<ApiResponse<UserActivity>> {
     return fetchApi<UserActivity>('/activities', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   },
 
-  // Save multiple activities in batch
   async saveActivitiesBatch(
     requests: ActivitySaveRequest[]
   ): Promise<ApiResponse<UserActivity[]>> {
@@ -111,18 +148,20 @@ export const activityApi = {
   },
 };
 
-// Transaction API Functions
+// ====================
+// Transaction API
+// ====================
 export const transactionApi = {
-  // Get user transactions
   async getUserTransactions(
     userId: string,
     page = 1,
     pageSize = 10
   ): Promise<ApiResponse<Transaction[]>> {
-    return fetchApi<Transaction[]>(`/users/${userId}/transactions?page=${page}&pageSize=${pageSize}`);
+    return fetchApi<Transaction[]>(
+      `/users/${userId}/transactions?page=${page}&pageSize=${pageSize}`
+    );
   },
 
-  // Create transaction asynchronously
   async createTransaction(
     request: TransactionSaveRequest
   ): Promise<ApiResponse<Transaction>> {
@@ -132,7 +171,6 @@ export const transactionApi = {
     });
   },
 
-  // Update transaction status
   async updateTransactionStatus(
     id: string,
     status: string
@@ -144,43 +182,55 @@ export const transactionApi = {
   },
 };
 
-// Initialize user session
+// ====================
+// Session Initialization
+// ====================
 export async function initializeUserSession(
   email: string
 ): Promise<ApiResponse<{ user: User; isNewUser: boolean }>> {
-  // First, try to find existing user
   const existingUser = await userApi.getUserByEmail(email);
-  
+
   if (existingUser.success && existingUser.data) {
-    return { success: true, data: { user: existingUser.data, isNewUser: false } };
+    return {
+      success: true,
+      data: { user: existingUser.data, isNewUser: false },
+    };
   }
-  
-  // Create new user with email (using a generated ID)
+
   const newUserId = crypto.randomUUID();
-  const createResponse = await userApi.createOrUpdateUser(newUserId, email);
-  
+  const createResponse = await userApi.createOrUpdateUser(
+    newUserId,
+    email
+  );
+
   if (createResponse.success && createResponse.data) {
-    return { success: true, data: { user: createResponse.data, isNewUser: true } };
+    return {
+      success: true,
+      data: { user: createResponse.data, isNewUser: true },
+    };
   }
-  
-  return { success: false, error: createResponse.error || 'Failed to create user' };
+
+  return {
+    success: false,
+    error: createResponse.error || 'Failed to create user',
+  };
 }
 
-// Async activity queue for offline/batch processing
+// ====================
+// Activity Queue
+// ====================
 class ActivityQueue {
   private queue: ActivitySaveRequest[] = [];
   private isProcessing = false;
   private flushInterval: number | null = null;
 
   constructor() {
-    // Flush queue every 30 seconds
     this.flushInterval = window.setInterval(() => this.flush(), 30000);
   }
 
   add(request: ActivitySaveRequest): void {
     this.queue.push(request);
-    
-    // Flush immediately if queue reaches 10 items
+
     if (this.queue.length >= 10) {
       this.flush();
     }
@@ -188,15 +238,14 @@ class ActivityQueue {
 
   async flush(): Promise<void> {
     if (this.isProcessing || this.queue.length === 0) return;
-    
+
     this.isProcessing = true;
     const batch = this.queue.splice(0, 10);
-    
+
     try {
       await activityApi.saveActivitiesBatch(batch);
     } catch (error) {
       console.error('Failed to flush activity queue:', error);
-      // Re-add failed items to the front of the queue
       this.queue.unshift(...batch);
     } finally {
       this.isProcessing = false;
@@ -207,21 +256,21 @@ class ActivityQueue {
     if (this.flushInterval) {
       clearInterval(this.flushInterval);
     }
-    // Final flush before destroy
     this.flush();
   }
 }
 
-// Singleton activity queue instance
 export const activityQueue = new ActivityQueue();
 
-// Utility to debounce function calls
+// ====================
+// Debounce Utility
+// ====================
 export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: number | null = null;
-  
+
   return (...args: Parameters<T>) => {
     if (timeout) {
       clearTimeout(timeout);

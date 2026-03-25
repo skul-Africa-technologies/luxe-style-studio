@@ -90,38 +90,38 @@ const Users = () => {
   const [userToDelete, setUserToDelete] = useState<DisplayUser | null>(null);
   const token = localStorage.getItem("admin-token");
 
-  // Fetch users from API
+   // Fetch users from API
   const fetchUsers = async () => {
     if (!token) return;
     setLoading(true);
-    try {
-      const res = await fetch("http://localhost:3001/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+     try {
+       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users`, {
+         headers: { Authorization: `Bearer ${token}` },
+       });
+       const data = await res.json();
 
-      const mappedUsers: DisplayUser[] = (data.data || []).map((u: User) => ({
-        _id: u._id,
-        name: u.name || "Unknown",
-        email: u.email || "",
-        phone: u.phone || "—",
-        role: u.role || "customer",
-        orderCount: u.orderCount || 0,
-        joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }) : "—",
-      }));
+       const mappedUsers: DisplayUser[] = (data.data || []).map((u: User) => ({
+         _id: u._id,
+         name: u.name || "Unknown",
+         email: u.email || "",
+         phone: u.phone || "—",
+         role: u.role || "customer",
+         orderCount: u.orderCount || 0,
+         joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-US", {
+           year: "numeric",
+           month: "short",
+           day: "numeric",
+         }) : "—",
+       }));
 
-      setUsers(mappedUsers);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+       setUsers(mappedUsers);
+     } catch (err) {
+       console.error("Failed to fetch users:", err);
+       setUsers([]);
+     } finally {
+       setLoading(false);
+     }
+   };
 
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
@@ -150,11 +150,11 @@ const Users = () => {
   const handleDeleteConfirm = async () => {
     if (!userToDelete || !token) return;
     
-    try {
-      const res = await fetch(`http://localhost:3001/users/${userToDelete._id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+     try {
+       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/${userToDelete._id}`, {
+         method: "DELETE",
+         headers: { Authorization: `Bearer ${token}` },
+       });
       
       if (res.ok) {
         setFilteredUsers(filteredUsers.filter((u) => u._id !== userToDelete._id));

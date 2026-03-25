@@ -113,13 +113,13 @@ const Dashboard = () => {
       return;
     }
 
-    const fetchDashboard = async () => {
-      try {
-        const res = await fetch("http://localhost:3001/admin/dashboard", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+     const fetchDashboard = async () => {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/dashboard`, {
+            headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         });
 
         if (!res.ok) throw new Error("Failed to fetch dashboard data");
 

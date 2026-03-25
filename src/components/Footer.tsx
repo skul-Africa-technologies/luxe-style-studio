@@ -105,7 +105,7 @@ const Footer = () => {
 
         {/* Bottom bar */}
         <div className="border-t border-primary-foreground/10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-body text-xs tracking-wider text-primary-foreground/40">
+          <span className="font-body text-xs tracking-wider text-primary-foreground/40" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
             © 2026 Matteekay . All rights reserved.
           </span>
           <span className="font-body text-xs tracking-wider text-primary-foreground/30">

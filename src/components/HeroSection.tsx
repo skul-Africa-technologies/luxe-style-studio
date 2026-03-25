@@ -32,7 +32,7 @@ const HeroSection = () => {
         <div className="w-px h-8 bg-primary-foreground/40" />
       </div>
 
-        <h1 className="font-brand text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold text-primary-foreground tracking-[0.12em]">
+        <h1 className="font-brand text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold text-primary-foreground tracking-[0.12em]" style={{ fontFamily: 'Playfair Display, serif' }}>
           MATTEEKAY
         </h1>
         <br />

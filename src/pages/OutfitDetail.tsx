@@ -19,6 +19,17 @@ interface OutfitDetailType {
   category: string;
 }
 
+interface BackendItem {
+  _id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  description: string;
+  category: string;
+  fabric?: string;
+  style?: string;
+}
+
 const OutfitDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,36 +39,34 @@ const OutfitDetail = () => {
   const [error, setError] = useState("");
   const [isAdded, setIsAdded] = useState(false);
 
-  useEffect(() => {
-    const fetchOutfit = async () => {
-      try {
-        const res = await axios.get("http://localhost:3001/items", {
-          params: { page: 1, limit: 50 }, // you can paginate better
-        });
+    useEffect(() => {
+      const fetchOutfit = async () => {
+         try {
+           const res = await axios.get<{ data: BackendItem }>(`${import.meta.env.VITE_API_BASE_URL}/items/${id}`);
 
-        const found = res.data.data.find((item: any) => item._id === id);
-        if (!found) {
-          setError("Outfit not found");
-        } else {
-          setOutfit({
-            id: found._id,
-            name: found.name,
-            price: `$${found.price.toFixed(2)}`,
-            image: found.imageUrl,
-            rating: Math.floor(Math.random() * 5) + 1,
-            description: found.description,
-            fabric: found.fabric,
-            style: found.style,
-            category: found.category,
-          });
-        }
-      } catch (err: any) {
-        console.error(err);
-        setError("Failed to fetch outfit");
-      } finally {
-        setLoading(false);
-      }
-    };
+           const item = res.data.data;
+           setOutfit({
+             id: item._id,
+             name: item.name,
+             price: `$${item.price.toFixed(2)}`,
+             image: item.imageUrl,
+             rating: Math.floor(Math.random() * 5) + 1, // TODO: Replace with actual rating from backend
+             description: item.description,
+             fabric: item.fabric,
+             style: item.style,
+             category: item.category,
+           });
+         } catch (err: Error | unknown) {
+           if (axios.isAxiosError(err)) {
+             console.error("Axios error:", err.message);
+           } else {
+             console.error(err);
+           }
+           setError("Failed to fetch outfit");
+         } finally {
+           setLoading(false);
+         }
+       };
 
     fetchOutfit();
   }, [id]);
