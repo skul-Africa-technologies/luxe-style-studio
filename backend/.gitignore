@@ -1,6 +1,8 @@
 # Environment files
 .env
 .env.*
+.env.local
+.env
 
 # Node modules (VERY IMPORTANT)
 node_modules/

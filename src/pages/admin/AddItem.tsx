@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { api } from "@/lib/api";
 
 const categories = [
   "Dresses",
@@ -22,8 +23,11 @@ const categories = [
   "Footwear",
 ];
 
-const CLOUDINARY_UPLOAD_PRESET = "frontend_upload"; // unsigned
+const CLOUDINARY_UPLOAD_PRESET = "frontend_upload";
 const CLOUDINARY_CLOUD_NAME = "dtiqu4sre";
+
+// ✅ BASE URL (PRO FIX)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddItem = () => {
   const [formData, setFormData] = useState({
@@ -32,6 +36,7 @@ const AddItem = () => {
     price: "",
     category: "",
   });
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
@@ -45,7 +50,7 @@ const AddItem = () => {
   const token = localStorage.getItem("admin-token");
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -59,19 +64,15 @@ const AddItem = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
+    if (!file) return;
 
-      // Preview
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+    setImageFile(file);
 
-      // Start uploading asynchronously
-      uploadToCloudinary(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
 
-      if (errors.image) setErrors((prev) => ({ ...prev, image: "" }));
-    }
+    uploadToCloudinary(file);
   };
 
   const removeImage = () => {
@@ -83,216 +84,213 @@ const AddItem = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
     if (!formData.name.trim()) newErrors.name = "Item name is required";
-    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
     if (!formData.price || parseFloat(formData.price) <= 0)
       newErrors.price = "Price must be greater than 0";
     if (!formData.category) newErrors.category = "Please select a category";
     if (!imageUrl) newErrors.image = "Please upload an image";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Async Cloudinary upload
+  // ✅ CLOUDINARY UPLOAD
   const uploadToCloudinary = async (file: File) => {
     try {
       setImageUploading(true);
+
       const form = new FormData();
       form.append("file", file);
       form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: form }
+        { method: "POST", body: form },
       );
 
-      if (!res.ok) throw new Error("Cloudinary upload failed");
+      if (!res.ok) throw new Error("Upload failed");
+
       const data = await res.json();
       setImageUrl(data.secure_url);
     } catch (err) {
       console.error(err);
-      alert("Image upload failed. Check Cloudinary settings.");
+      alert("Image upload failed");
       removeImage();
     } finally {
       setImageUploading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    if (!token) return alert("Admin not authenticated");
+  // ✅ SUBMIT (FIXED BASE URL)
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setIsSubmitting(true);
+  if (imageUploading) {
+    alert("Image still uploading...");
+    return;
+  }
 
-    try {
-      const res = await fetch("http://localhost:3001/items", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          imageUrl,
-        }),
-      });
+  if (!imageUrl) {
+    alert("Please upload image first");
+    return;
+  }
 
-      if (!res.ok) throw new Error("Failed to add item");
+  if (!validateForm()) return;
 
-      setShowSuccess(true);
-      setFormData({ name: "", description: "", price: "", category: "" });
-      removeImage();
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add item. Check console.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  setIsSubmitting(true);
+
+  try {
+    await api.post("/items", {
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      category: formData.category,
+      imageUrl,
+    });
+
+    setShowSuccess(true);
+
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+    });
+
+    removeImage();
+
+    setTimeout(() => setShowSuccess(false), 3000);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add item");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <AdminLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="font-brand text-2xl text-foreground mb-2">Add New Item</h1>
-        <p className="text-muted-foreground font-body mb-6">
-          Fill in the details below to add a new item to your catalog.
+        <h1 className="font-brand text-2xl mb-2">Add New Item</h1>
+        <p className="text-muted-foreground mb-6">
+          Fill in item details below
         </p>
 
-        {/* Blue Upload Line */}
-        {imageUploading && <div className="h-1 w-full bg-blue-500 mb-4 animate-pulse"></div>}
+        {imageUploading && (
+          <div className="h-1 w-full bg-blue-500 mb-4 animate-pulse" />
+        )}
 
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-800 font-body">✓ Item added successfully!</p>
+            ✓ Item added successfully!
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Item Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Item Name *</Label>
+          {/* Name */}
+          <div>
+            <Label>Item Name</Label>
             <Input
-              id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter item name"
-              className={errors.name ? "border-red-500" : ""}
             />
-            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+            {errors.name && <p className="text-red-500">{errors.name}</p>}
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+          <div>
+            <Label>Description</Label>
             <Textarea
-              id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Enter item description"
-              rows={4}
-              className={errors.description ? "border-red-500" : ""}
             />
             {errors.description && (
-              <p className="text-sm text-red-500">{errors.description}</p>
+              <p className="text-red-500">{errors.description}</p>
             )}
           </div>
 
           {/* Price + Category */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ($) *</Label>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label>Price</Label>
               <Input
-                id="price"
-                name="price"
                 type="number"
-                step="0.01"
-                min="0"
+                name="price"
                 value={formData.price}
                 onChange={handleInputChange}
-                placeholder="0.00"
-                className={errors.price ? "border-red-500" : ""}
               />
-              {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
+              {errors.price && <p className="text-red-500">{errors.price}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={handleCategoryChange}>
-                <SelectTrigger className={errors.category ? "border-red-500" : ""}>
+
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={formData.category}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.category && (
-                <p className="text-sm text-red-500">{errors.category}</p>
+                <p className="text-red-500">{errors.category}</p>
               )}
             </div>
           </div>
 
-          {/* Image */}
-          <div className="space-y-2">
-            <Label>Image Upload *</Label>
+          {/* Image Upload */}
+          <div>
+            <Label>Image</Label>
+
             {!imagePreview ? (
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  errors.image
-                    ? "border-red-500 bg-red-50"
-                    : "border-border hover:border-primary hover:bg-accent/50"
-                }`}
+                className="border p-8 text-center cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-foreground font-body mb-1">
-                  Click to upload an image
-                </p>
-                <p className="text-sm text-muted-foreground font-body">
-                  PNG, JPG, GIF up to 10MB
-                </p>
+                <Upload className="mx-auto mb-2" />
+                Click to upload
                 <input
                   ref={fileInputRef}
                   type="file"
+                  hidden
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="hidden"
                 />
               </div>
             ) : (
-              <div className="relative inline-block">
+              <div className="relative">
                 <img
                   src={imagePreview}
-                  alt="Preview"
-                  className="w-full max-w-md h-48 object-cover rounded-lg"
+                  className="w-full h-48 object-cover rounded"
                 />
                 <Button
                   type="button"
-                  variant="destructive"
                   size="icon"
                   className="absolute top-2 right-2"
                   onClick={removeImage}
                 >
-                  <X size={16} />
+                  <X />
                 </Button>
               </div>
             )}
-            {errors.image && <p className="text-sm text-red-500">{errors.image}</p>}
+
+            {errors.image && <p className="text-red-500">{errors.image}</p>}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full md:w-auto min-w-[200px]"
-            disabled={isSubmitting || imageUploading}
-          >
-            {isSubmitting ? "Adding Item..." : "Add Item"}
+          <Button disabled={isSubmitting || imageUploading}>
+            {isSubmitting ? "Adding..." : "Add Item"}
           </Button>
         </form>
       </div>

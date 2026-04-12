@@ -11,11 +11,10 @@ const CollectionSection = () => {
   useEffect(() => {
     const loadOutfits = async () => {
       try {
-        const outfitsData = await fetchOutfits(1, 20);
-        setOutfits(outfitsData);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch items.");
+        const data = await fetchOutfits(1, 20);
+        setOutfits(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch items.");
       } finally {
         setLoading(false);
       }
@@ -27,7 +26,9 @@ const CollectionSection = () => {
   if (loading) {
     return (
       <section className="py-16 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
-        <p className="text-center text-muted-foreground">Loading outfits...</p>
+        <p className="text-center text-muted-foreground">
+          Loading outfits...
+        </p>
       </section>
     );
   }
