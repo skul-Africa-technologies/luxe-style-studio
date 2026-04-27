@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { fetchOutfits } from "@/data/outfits";
+
 import OutfitCard from "./OutfitCard";
-import type { Outfit } from "@/data/outfits";
+import { fetchOutfits, Outfit } from "../data/outfits";
+
 
 const CollectionSection = () => {
   const [outfits, setOutfits] = useState<Outfit[]>([]);

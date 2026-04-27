@@ -25,8 +25,19 @@ export interface ApiItem {
   style?: string;
 }
 
+/* ================= ENV SAFETY ================= */
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_URL = `${BASE_URL.replace(/\/$/, "")}/items`;
+
+if (!BASE_URL) {
+  throw new Error("❌ VITE_API_BASE_URL is not defined in .env file");
+}
+
+/* ================= AXIOS INSTANCE ================= */
+
+const api = axios.create({
+  baseURL: BASE_URL.replace(/\/$/, ""),
+});
 
 /* ================= LIST ================= */
 
@@ -34,11 +45,11 @@ export const fetchOutfits = async (
   page = 1,
   limit = 20
 ): Promise<Outfit[]> => {
-  const res = await axios.get(`${API_URL}`, {
+  const res = await api.get("/items", {
     params: { page, limit },
   });
 
-  const items: ApiItem[] = res.data.data;
+  const items: ApiItem[] = res.data?.data;
 
   if (!Array.isArray(items)) {
     throw new Error("Invalid API response format");
@@ -58,11 +69,14 @@ export const fetchOutfits = async (
 };
 
 /* ================= SINGLE ITEM ================= */
-export const fetchOutfitById = async (id: string): Promise<Outfit | null> => {
-  try {
-    const res = await axios.get(`${API_URL}/${id}`);
 
-    const item: ApiItem = res.data; // ✅ FIX HERE
+export const fetchOutfitById = async (
+  id: string
+): Promise<Outfit | null> => {
+  try {
+    const res = await api.get(`/items/${id}`);
+
+    const item: ApiItem = res.data;
 
     if (!item || !item._id) return null;
 
@@ -73,8 +87,8 @@ export const fetchOutfitById = async (id: string): Promise<Outfit | null> => {
       image: item.imageUrl,
       rating: Math.floor(Math.random() * 5) + 1,
       description: item.description,
-      fabric: item.fabric ?? "",   // optional safety
-      style: item.style ?? "",     // optional safety
+      fabric: item.fabric ?? "",
+      style: item.style ?? "",
       category: item.category,
     };
   } catch (err) {
