@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, ShoppingBag, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 import { fetchOutfitById } from "@/data/outfits";
 
@@ -165,8 +164,6 @@ const OutfitDetail = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

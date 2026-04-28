@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useCart } from "@/context/CartContext";
 
 interface FormData {
@@ -199,7 +198,6 @@ const Checkout = () => {
             </div>
           </div>
         </motion.main>
-        <Footer />
       </div>
     );
   }
@@ -358,7 +356,7 @@ const Checkout = () => {
                   ) : (
                     "Place Order"
                   )}
-                </motion.button>
+              </motion.button>
                 <p className="font-body text-[11px] text-center text-muted-foreground tracking-wider">
                   By placing your order, you agree to receive communication from
                   MATTEEKAY 
@@ -437,7 +435,6 @@ const Checkout = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
