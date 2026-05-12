@@ -15,13 +15,14 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "incremental": true,
+    "incremental": false,
     "skipLibCheck": true,
 
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true
   },
