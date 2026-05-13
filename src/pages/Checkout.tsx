@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useCart } from "@/context/CartContext";
 
 interface FormData {
@@ -203,9 +204,10 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
-      <main className="pt-24 md:pt-28 pb-24">
+      <MobileBottomNav />
+      <main className="pt-24 md:pt-28 max-w-6xl mx-auto px-6 md:px-12 pb-24">
         <div className="max-w-6xl mx-auto px-6 md:px-12 pb-8">
           <motion.button
             initial={{ opacity: 0, x: -10 }}

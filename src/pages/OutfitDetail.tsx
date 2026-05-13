@@ -1,9 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Heart } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { fetchOutfitById } from "@/data/outfits";
 
 interface OutfitDetailType {
@@ -11,7 +13,6 @@ interface OutfitDetailType {
   name: string;
   price: string;
   image: string;
-  rating: number;
   description: string;
   fabric?: string;
   style?: string;
@@ -22,11 +23,14 @@ const OutfitDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { isItemLoved, toggleItem } = useWishlist();
 
   const [outfit, setOutfit] = useState<OutfitDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdded, setIsAdded] = useState(false);
+
+  const isLoved = outfit ? isItemLoved(outfit.id) : false;
 
   useEffect(() => {
     const load = async () => {
@@ -81,8 +85,9 @@ const OutfitDetail = () => {
   const whatsappUrl = `https://wa.me/1234567890?text=${whatsappMessage}`;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
+      <MobileBottomNav />
 
       <main className="pt-20 md:pt-24 max-w-7xl mx-auto px-6 md:px-12 pb-24">
         <motion.button
@@ -96,12 +101,25 @@ const OutfitDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Image */}
-          <div className="overflow-hidden bg-secondary aspect-[3/4]">
+          <div className="overflow-hidden bg-secondary aspect-[3/4] relative">
             <img
               src={outfit!.image}
               alt={outfit!.name}
               className="w-full h-full object-cover"
             />
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => toggleItem({ id: outfit!.id, name: outfit!.name, price: outfit!.price, image: outfit!.image, category: outfit!.category })}
+              className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-background transition-colors"
+              aria-label={isLoved ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart
+                size={18}
+                className={`transition-all duration-300 ${
+                  isLoved ? "fill-red-500 text-red-500" : "text-foreground"
+                }`}
+              />
+            </motion.button>
           </div>
 
           {/* Info */}
@@ -112,23 +130,7 @@ const OutfitDetail = () => {
 
             <h1 className="text-4xl font-light">{outfit!.name}</h1>
 
-            <div className="flex items-center gap-4">
-              <span className="text-2xl">{outfit!.price}</span>
-
-              <div className="flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    className={
-                      i < outfit!.rating
-                        ? "fill-black text-black"
-                        : "text-gray-300"
-                    }
-                  />
-                ))}
-              </div>
-            </div>
+            <span className="text-2xl">{outfit!.price}</span>
 
             <p className="text-muted-foreground">{outfit!.description}</p>
 

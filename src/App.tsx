@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import OutfitDetail from "./pages/OutfitDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
+import Wishlist from "./pages/Wishlist";
 
 import Login from "./pages/admin/Login";
 import Dashboard from "./pages/admin/Dashboard";
@@ -18,6 +19,7 @@ import Settings from "./pages/admin/Settings";
 import Items from "./pages/admin/Items";
 
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { SessionProvider } from "@/context/SessionContext";
 
 import { AdminThemeProvider } from "./context/AdminThemeContext";
@@ -29,17 +31,19 @@ const App = () => (
     <TooltipProvider>
       <SessionProvider>
         <CartProvider>
-          <Toaster />
-          <Sonner />
+          <WishlistProvider>
+            <Toaster />
+            <Sonner />
 
           <BrowserRouter>
             <Routes>
               {/* ================= USER ROUTES ================= */}
               <Route path="/" element={<Index />} />
               <Route path="/outfit/:id" element={<OutfitDetail />} />
-              <Route path="/checkout" element={<Checkout />} />
+<Route path="/checkout" element={<Checkout />} />
+               <Route path="/wishlist" element={<Wishlist />} />
 
-              {/* ================= ADMIN ROUTES ================= */}
+               {/* ================= ADMIN ROUTES ================= */}
               <Route
                 path="/admin/login"
                 element={
@@ -107,6 +111,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+        </WishlistProvider>
         </CartProvider>
       </SessionProvider>
     </TooltipProvider>

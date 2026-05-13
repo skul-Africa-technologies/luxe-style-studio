@@ -176,4 +176,8 @@
   .font-brand {
     font-family: var(--font-brand);
   }
+
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }

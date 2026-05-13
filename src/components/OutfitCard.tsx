@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface OutfitCardProps {
   id: string;
   image: string;
   name: string;
   price: string;
-  initialRating: number;
   index: number;
 }
 
@@ -17,27 +17,11 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
   image, 
   name, 
   price, 
-  initialRating, 
   index 
 }) => {
   const navigate = useNavigate();
-  const [rating, setRating] = useState(initialRating);
-  const [hoverRating, setHoverRating] = useState(0);
-
-  const handleRatingClick = (e: React.MouseEvent, newRating: number) => {
-    e.stopPropagation();
-    setRating(newRating);
-  };
-
-  const handleRatingHover = (hoveredRating: number) => {
-    setHoverRating(hoveredRating);
-  };
-
-  const handleMouseLeave = () => {
-    setHoverRating(0);
-  };
-
-  const displayRating = hoverRating || rating;
+  const { isItemLoved, toggleItem } = useWishlist();
+  const isLoved = isItemLoved(id);
 
   return (
     <motion.div
@@ -57,40 +41,30 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 rounded-xl"
         />
         <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-500 rounded-xl" />
+        
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleItem({ id, name, price, image });
+          }}
+          className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-background transition-colors"
+          aria-label={isLoved ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart
+            size={18}
+            className={`transition-all duration-300 ${
+              isLoved 
+                ? "fill-red-500 text-red-500" 
+                : "text-foreground"
+            }`}
+          />
+        </motion.button>
       </div>
 
       <div className="space-y-2">
         <h3 className="font-display text-lg md:text-xl font-medium text-foreground tracking-wide">{name}</h3>
-        <div className="flex items-center justify-between">
-          <span className="font-body text-sm tracking-wider text-muted-foreground">{price}</span>
-          <div 
-            className="flex items-center gap-0.5"
-            onMouseLeave={handleMouseLeave}
-          >
-            {Array.from({ length: 5 }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={(e) => handleRatingClick(e, i + 1)}
-                onMouseEnter={() => handleRatingHover(i + 1)}
-                className="focus:outline-none p-0.5 transition-transform duration-200 hover:scale-110"
-                aria-label={`Rate ${i + 1} stars`}
-              >
-                <Star
-                  size={14}
-                  className={`
-                    transition-colors duration-200
-                    ${i < displayRating 
-                      ? "fill-foreground text-foreground" 
-                      : "text-border"
-                    }
-                    ${hoverRating > 0 && i < hoverRating ? "opacity-100" : ""}
-                  `}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
+        <span className="font-body text-sm tracking-wider text-muted-foreground">{price}</span>
       </div>
     </motion.div>
   );

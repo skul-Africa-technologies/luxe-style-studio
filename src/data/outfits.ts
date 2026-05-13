@@ -7,7 +7,6 @@ export interface Outfit {
   name: string;
   price: string;
   image: string;
-  rating: number;
   description: string;
   fabric?: string;
   style?: string;
@@ -60,7 +59,6 @@ export const fetchOutfits = async (
     name: item.name,
     price: `$${item.price.toFixed(2)}`,
     image: item.imageUrl,
-    rating: Math.floor(Math.random() * 5) + 1,
     description: item.description,
     fabric: item.fabric,
     style: item.style,
@@ -80,17 +78,16 @@ export const fetchOutfitById = async (
 
     if (!item || !item._id) return null;
 
-    return {
-      id: item._id,
-      name: item.name,
-      price: `$${item.price.toFixed(2)}`,
-      image: item.imageUrl,
-      rating: Math.floor(Math.random() * 5) + 1,
-      description: item.description,
-      fabric: item.fabric ?? "",
-      style: item.style ?? "",
-      category: item.category,
-    };
+return {
+        id: item._id,
+        name: item.name,
+        price: `$${item.price.toFixed(2)}`,
+        image: item.imageUrl,
+        description: item.description,
+        fabric: item.fabric ?? "",
+        style: item.style ?? "",
+        category: item.category,
+      };
   } catch (err) {
     console.error("fetchOutfitById error:", err);
     return null;

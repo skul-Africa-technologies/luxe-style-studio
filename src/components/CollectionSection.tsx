@@ -52,7 +52,6 @@ const CollectionSection = () => {
             image={outfit.image}
             name={outfit.name}
             price={outfit.price}
-            initialRating={outfit.rating}
             index={idx}
           />
         ))}

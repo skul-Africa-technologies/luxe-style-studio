@@ -20,7 +20,12 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+
+    /* Path aliases */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }
