@@ -137,7 +137,7 @@ const Orders = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/orders", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -203,7 +203,7 @@ const Orders = () => {
     if (!token) return;
     setActionLoading(id);
     try {
-      const res = await fetch(`http://localhost:3001/orders/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -226,7 +226,7 @@ const Orders = () => {
     
     setActionLoading(id);
     try {
-      const res = await fetch(`http://localhost:3001/orders/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -358,7 +358,7 @@ const Orders = () => {
                           {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                         </TableCell>
                         <TableCell className="font-body text-sm text-foreground font-medium">
-                          ${order.total.toFixed(2)}
+                          ₦{order.total.toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -535,16 +535,16 @@ const Orders = () => {
                           <p className="font-body text-sm text-foreground">{item.name}</p>
                           <p className="font-body text-xs text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <p className="font-body text-sm font-medium text-foreground">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </p>
+                         <p className="font-body text-sm font-medium text-foreground">
+                           ₦{(item.price * item.quantity).toFixed(2)}
+                         </p>
                       </div>
                     ))}
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <span className="font-body text-sm font-medium text-foreground">Total</span>
-                      <span className="font-display text-lg font-medium text-foreground">
-                        ${selectedOrder.total.toFixed(2)}
-                      </span>
+                       <span className="font-display text-lg font-medium text-foreground">
+                         ₦{selectedOrder.total.toFixed(2)}
+                       </span>
                     </div>
                   </CardContent>
                 </Card>

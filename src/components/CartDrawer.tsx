@@ -87,9 +87,9 @@ const CartDrawer = () => {
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
                       Subtotal
                     </span>
-                    <span className="font-display text-lg text-foreground">
-                      ${subtotal.toLocaleString()}
-                    </span>
+                     <span className="font-display text-lg text-foreground">
+                       ₦{subtotal.toLocaleString()}
+                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-body text-xs tracking-wider text-muted-foreground uppercase">

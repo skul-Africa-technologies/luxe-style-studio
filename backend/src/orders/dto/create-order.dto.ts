@@ -49,12 +49,17 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 
-  @ApiProperty({ minimum: 0 })
-  @IsNumber()
-  @Min(0)
-  total: number;
+   @ApiProperty({ minimum: 0 })
+   @IsNumber()
+   @Min(0)
+   total: number;
 
-  @ApiPropertyOptional()
+   @ApiPropertyOptional({ description: 'Currency code', default: 'NGN' })
+   @IsOptional()
+   @IsString()
+   currency?: string;
+
+   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   shippingAddress?: string;

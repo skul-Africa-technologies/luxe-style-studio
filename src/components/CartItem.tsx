@@ -53,9 +53,9 @@ const CartItem = ({ item }: CartItemProps) => {
           <p className="font-body text-sm text-muted-foreground">
             {item.category} — {item.style}
           </p>
-          <p className="font-body text-sm font-medium text-foreground">
-            ${itemTotal.toLocaleString()}
-          </p>
+           <p className="font-body text-sm font-medium text-foreground">
+             ₦{itemTotal.toLocaleString()}
+           </p>
         </div>
         
         {/* Quantity controls */}

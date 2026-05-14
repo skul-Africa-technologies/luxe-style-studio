@@ -43,7 +43,7 @@ function ProductCard({ id, name, price, onView, onAddToCart }: ProductCardProps)
       </div>
       <CardContent className="p-4">
         <h3 className="font-semibold">{name}</h3>
-        <p className="text-lg font-bold mt-1">${price.toFixed(2)}</p>
+        <p className="text-lg font-bold mt-1">₦{price.toFixed(2)}</p>
         <div className="flex gap-2 mt-4">
           <Button variant="outline" size="sm" onClick={handleView}>
             <Eye className="w-4 h-4 mr-1" />

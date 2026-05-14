@@ -57,7 +57,7 @@ export const fetchOutfits = async (
   return items.map((item) => ({
     id: item._id,
     name: item.name,
-    price: `$${item.price.toFixed(2)}`,
+    price: `₦${item.price.toFixed(2)}`,
     image: item.imageUrl,
     description: item.description,
     fabric: item.fabric,
@@ -78,16 +78,16 @@ export const fetchOutfitById = async (
 
     if (!item || !item._id) return null;
 
-return {
-        id: item._id,
-        name: item.name,
-        price: `$${item.price.toFixed(2)}`,
-        image: item.imageUrl,
-        description: item.description,
-        fabric: item.fabric ?? "",
-        style: item.style ?? "",
-        category: item.category,
-      };
+  return {
+      id: item._id,
+      name: item.name,
+      price: `₦${item.price.toFixed(2)}`,
+      image: item.imageUrl,
+      description: item.description,
+      fabric: item.fabric ?? "",
+      style: item.style ?? "",
+      category: item.category,
+    };
   } catch (err) {
     console.error("fetchOutfitById error:", err);
     return null;

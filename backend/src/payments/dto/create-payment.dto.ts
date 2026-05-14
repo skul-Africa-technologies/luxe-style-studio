@@ -6,12 +6,17 @@ export class CreatePaymentDto {
   @IsString()
   orderId: string;
 
-  @ApiProperty({ description: 'Payment amount', minimum: 0 })
-  @IsNumber()
-  @Min(0)
-  amount: number;
+   @ApiProperty({ description: 'Payment amount', minimum: 0 })
+   @IsNumber()
+   @Min(0)
+   amount: number;
 
-  @ApiPropertyOptional({ description: 'Payment method', default: 'manual' })
+   @ApiPropertyOptional({ description: 'Currency code', default: 'NGN' })
+   @IsOptional()
+   @IsString()
+   currency?: string;
+
+   @ApiPropertyOptional({ description: 'Payment method', default: 'manual' })
   @IsOptional()
   @IsString()
   method?: string;

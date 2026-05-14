@@ -223,20 +223,20 @@ export function UserDashboard() {
                             <span>
                               {item.name} x {item.quantity}
                             </span>
-                            <span className="text-muted-foreground">
-                              ${(item.price * item.quantity).toFixed(2)}
-                            </span>
+                             <span className="text-muted-foreground">
+                               {transaction.currency === 'NGN' ? '₦' : '$'}{(item.price * item.quantity).toFixed(2)}
+                             </span>
                           </div>
                         ))}
                       </div>
                       
-                      <div className="flex justify-between mt-3 pt-3 border-t">
-                        <span className="font-medium">Total</span>
-                        <span className="font-medium">
-                          {transaction.currency === 'USD' ? '$' : transaction.currency}
-                          {transaction.amount.toFixed(2)}
-                        </span>
-                      </div>
+                       <div className="flex justify-between mt-3 pt-3 border-t">
+                         <span className="font-medium">Total</span>
+                         <span className="font-medium">
+                           {transaction.currency === 'NGN' ? '₦' : '$'}
+                           {transaction.amount.toFixed(2)}
+                         </span>
+                       </div>
                       
                       <p className="text-xs text-muted-foreground mt-2">
                         {format(new Date(transaction.createdAt), 'MMMM d, yyyy h:mm a')}

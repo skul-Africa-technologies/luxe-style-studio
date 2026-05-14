@@ -410,9 +410,9 @@ const Checkout = () => {
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
                       Subtotal
                     </span>
-                    <span className="font-display text-lg text-foreground">
-                      ${subtotal.toLocaleString()}
-                    </span>
+                     <span className="font-display text-lg text-foreground">
+                       ₦{subtotal.toLocaleString()}
+                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
@@ -428,7 +428,7 @@ const Checkout = () => {
                       Total
                     </span>
                     <span className="font-display text-xl font-medium text-foreground">
-                      ${subtotal.toLocaleString()}
+                      ₦{subtotal.toLocaleString()}
                     </span>
                   </div>
                 </div>

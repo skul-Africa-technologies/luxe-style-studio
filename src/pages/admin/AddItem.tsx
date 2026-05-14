@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +25,8 @@ const categories = [
   "Footwear",
 ];
 
-const CLOUDINARY_UPLOAD_PRESET = "frontend_upload";
-const CLOUDINARY_CLOUD_NAME = "dtiqu4sre";
-
-// ✅ BASE URL (PRO FIX)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const AddItem = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -39,15 +36,12 @@ const AddItem = () => {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const token = localStorage.getItem("admin-token");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -66,19 +60,22 @@ const AddItem = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Basic validation
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
     setImageFile(file);
 
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
-
-    uploadToCloudinary(file);
   };
 
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    setImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -91,85 +88,56 @@ const AddItem = () => {
     if (!formData.price || parseFloat(formData.price) <= 0)
       newErrors.price = "Price must be greater than 0";
     if (!formData.category) newErrors.category = "Please select a category";
-    if (!imageUrl) newErrors.image = "Please upload an image";
+    if (!imageFile) newErrors.image = "Please upload an image";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ CLOUDINARY UPLOAD
-  const uploadToCloudinary = async (file: File) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
     try {
-      setImageUploading(true);
+      // Build FormData for multipart upload
+      const formDataPayload = new FormData();
+      formDataPayload.append("name", formData.name);
+      formDataPayload.append("description", formData.description);
+      formDataPayload.append("price", formData.price);
+      formDataPayload.append("category", formData.category);
+      formDataPayload.append("image", imageFile!);
 
-      const form = new FormData();
-      form.append("file", file);
-      form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      // Send to backend - the backend handles Cloudinary upload
+      await api.post("/items", formDataPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: form },
-      );
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
-      setImageUrl(data.secure_url);
-    } catch (err) {
-      console.error(err);
-      alert("Image upload failed");
+      setShowSuccess(true);
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+      });
       removeImage();
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigate("/admin/items");
+      }, 1500);
+    } catch (err: any) {
+      console.error("Failed to add item:", err);
+      const message = err.response?.data?.message || "Failed to add item";
+      alert(message);
     } finally {
-      setImageUploading(false);
+      setIsSubmitting(false);
     }
   };
-
-  // ✅ SUBMIT (FIXED BASE URL)
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (imageUploading) {
-    alert("Image still uploading...");
-    return;
-  }
-
-  if (!imageUrl) {
-    alert("Please upload image first");
-    return;
-  }
-
-  if (!validateForm()) return;
-
-  setIsSubmitting(true);
-
-  try {
-    await api.post("/items", {
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      category: formData.category,
-      imageUrl,
-    });
-
-    setShowSuccess(true);
-
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      category: "",
-    });
-
-    removeImage();
-
-    setTimeout(() => setShowSuccess(false), 3000);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to add item");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
   return (
     <AdminLayout>
@@ -179,13 +147,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           Fill in item details below
         </p>
 
-        {imageUploading && (
-          <div className="h-1 w-full bg-blue-500 mb-4 animate-pulse" />
-        )}
-
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            ✓ Item added successfully!
+            ✓ Item added successfully! Redirecting...
           </div>
         )}
 
@@ -198,7 +162,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.name && <p className="text-red-500">{errors.name}</p>}
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
 
           {/* Description */}
@@ -210,7 +174,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               onChange={handleInputChange}
             />
             {errors.description && (
-              <p className="text-red-500">{errors.description}</p>
+              <p className="text-red-500 text-sm">{errors.description}</p>
             )}
           </div>
 
@@ -224,7 +188,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 value={formData.price}
                 onChange={handleInputChange}
               />
-              {errors.price && <p className="text-red-500">{errors.price}</p>}
+              {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
             </div>
 
             <div>
@@ -245,7 +209,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </SelectContent>
               </Select>
               {errors.category && (
-                <p className="text-red-500">{errors.category}</p>
+                <p className="text-red-500 text-sm">{errors.category}</p>
               )}
             </div>
           </div>
@@ -256,11 +220,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 
             {!imagePreview ? (
               <div
-                className="border p-8 text-center cursor-pointer"
+                className="border p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="mx-auto mb-2" />
-                Click to upload
+                <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Click to upload</p>
+                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 5MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -274,10 +239,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <img
                   src={imagePreview}
                   className="w-full h-48 object-cover rounded"
+                  alt="Preview"
                 />
                 <Button
                   type="button"
                   size="icon"
+                  variant="secondary"
                   className="absolute top-2 right-2"
                   onClick={removeImage}
                 >
@@ -286,12 +253,26 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             )}
 
-            {errors.image && <p className="text-red-500">{errors.image}</p>}
+            {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
           </div>
 
-          <Button disabled={isSubmitting || imageUploading}>
-            {isSubmitting ? "Adding..." : "Add Item"}
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="font-body uppercase tracking-[0.1em]"
+            >
+              {isSubmitting ? "Adding..." : "Add Item"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/admin/items")}
+              className="font-body uppercase tracking-[0.1em]"
+            >
+              Cancel
+            </Button>
+          </div>
         </form>
       </div>
     </AdminLayout>

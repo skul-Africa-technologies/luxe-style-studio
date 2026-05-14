@@ -35,11 +35,14 @@ export class Order extends Document {
   @Prop({ type: [OrderItemSchema], required: true })
   items: OrderItem[];
 
-  @Prop({ required: true, min: 0 })
-  total: number;
+   @Prop({ required: true, min: 0 })
+   total: number;
 
-  @Prop({ default: 'pending', enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'] })
-  status: string;
+   @Prop({ default: 'NGN' })
+   currency: string;
+
+   @Prop({ default: 'pending', enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'] })
+   status: string;
 
   @Prop()
   shippingAddress?: string;

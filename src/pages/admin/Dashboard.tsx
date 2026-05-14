@@ -187,7 +187,7 @@ const Dashboard = () => {
             {/* Sales Today */}
             <AnalyticsCard
               title="Sales Today"
-              value={`$${data.analytics.sales.today.toLocaleString()}`}
+              value={`₦${data.analytics.sales.today.toLocaleString()}`}
               icon={DollarSign}
               trend={`${data.analytics.sales.trend.toFixed(1)}%`}
               trendUp={data.analytics.sales.trend >= 0}
@@ -289,9 +289,9 @@ const Dashboard = () => {
                             )}
                           </TableCell>
 
-                          <TableCell>
-                            ${order.total.toLocaleString()}
-                          </TableCell>
+                           <TableCell>
+                             ₦{order.total.toLocaleString()}
+                           </TableCell>
 
                           <TableCell className="capitalize">
                             {order.status}

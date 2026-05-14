@@ -9,9 +9,10 @@ async function bootstrap() {
   // ✅ Enable CORS (Configured for development and production)
   const frontendUrl = process.env.FRONTEND_URL;
   app.enableCors({
-    origin: frontendUrl ? frontendUrl : true, // allow specified origin or all in development
+    origin: frontendUrl ? frontendUrl : true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // ✅ Global validation pipe

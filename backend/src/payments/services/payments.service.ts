@@ -22,6 +22,7 @@ export class PaymentsService {
 
     const payment = new this.paymentModel({
       ...createPaymentDto,
+      currency: createPaymentDto.currency || 'NGN',
       orderId: new Types.ObjectId(createPaymentDto.orderId),
     });
 

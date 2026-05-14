@@ -28,9 +28,10 @@ export class CreateItemDto {
   @MaxLength(50, { message: 'Category must not exceed 50 characters' })
   category: string;
 
-  @ApiProperty({ example: 'https://res.cloudinary.com/.../image.jpg', description: 'Cloudinary image URL' })
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsUrl({}, { message: 'Please provide a valid image URL' })
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 /**

@@ -54,12 +54,18 @@ if (!API_BASE_URL) {
 
 
 
-// 🔐 Auto attach token to every request
+// 🔐 Auto attach token to every request + handle FormData
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("admin-token");
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // For FormData, remove default JSON content-type so browser can set
+  // multipart/form-data with proper boundary
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
   }
 
   return config;

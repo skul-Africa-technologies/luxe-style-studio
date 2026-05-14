@@ -6,11 +6,14 @@ export class Payment extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
   orderId: Types.ObjectId;
 
-  @Prop({ required: true, min: 0 })
-  amount: number;
+   @Prop({ required: true, min: 0 })
+   amount: number;
 
-  @Prop({ default: 'pending', enum: ['pending', 'completed', 'failed', 'refunded'] })
-  status: string;
+   @Prop({ default: 'NGN' })
+   currency: string;
+
+   @Prop({ default: 'pending', enum: ['pending', 'completed', 'failed', 'refunded'] })
+   status: string;
 
   @Prop({ default: 'manual', enum: ['manual', 'stripe', 'paypal', 'razorpay'] })
   method: string;

@@ -154,7 +154,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 /**
  * Price Parser Utility
- * Converts price string (e.g., "$4,200") to number for calculations
+ * Converts price string (e.g., "₦4,200") to number for calculations
  */
 export function parsePrice(priceStr: string): number {
   return parseFloat(priceStr.replace(/[^0-9.-]+/g, ""));
@@ -165,9 +165,9 @@ export function parsePrice(priceStr: string): number {
  * Converts number to price string format
  */
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-NG", {
     style: "currency",
-    currency: "USD",
+    currency: "NGN",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);

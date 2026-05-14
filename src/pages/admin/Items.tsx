@@ -59,7 +59,7 @@ const Items = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3001/items?limit=${itemsPerPage}&page=${page}&search=${search}`,
+        `${import.meta.env.VITE_API_BASE_URL}/items?limit=${itemsPerPage}&page=${page}&search=${search}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -97,9 +97,9 @@ const Items = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!itemToDelete) return;
+    if (!itemToDelete || !token) return;
     try {
-      await fetch(`http://localhost:3001/items/${itemToDelete}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/items/${itemToDelete}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -217,9 +217,9 @@ const Items = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium font-body">
-                        ${item.price.toFixed(2)}
-                      </div>
+                         <div className="font-medium font-body">
+                           ₦{item.price.toFixed(2)}
+                         </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">

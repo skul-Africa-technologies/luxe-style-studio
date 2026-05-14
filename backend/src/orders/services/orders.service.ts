@@ -15,33 +15,34 @@ export class OrdersService {
     private readonly usersService: UsersService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    let userId: Types.ObjectId | undefined;
-    let isNewUser = false;
+   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+     let userId: Types.ObjectId | undefined;
+     let isNewUser = false;
 
-    // If email is provided, find or create user
-    if (createOrderDto.email) {
-      const { user, isNew } = await this.usersService.findOrCreateFromCheckout({
-        email: createOrderDto.email,
-        name: createOrderDto.fullName || '',
-        phone: createOrderDto.phone,
-        address: createOrderDto.shippingAddress || createOrderDto.deliveryAddress,
-      });
-      userId = user._id as Types.ObjectId;
-      isNewUser = isNew;
-    }
+     // If email is provided, find or create user
+     if (createOrderDto.email) {
+       const { user, isNew } = await this.usersService.findOrCreateFromCheckout({
+         email: createOrderDto.email,
+         name: createOrderDto.fullName || '',
+         phone: createOrderDto.phone,
+         address: createOrderDto.shippingAddress || createOrderDto.deliveryAddress,
+       });
+       userId = user._id as Types.ObjectId;
+       isNewUser = isNew;
+     }
 
-    const order = new this.orderModel({
-      ...createOrderDto,
-      userId,
-      fullName: createOrderDto.fullName,
-      email: createOrderDto.email,
-      phone: createOrderDto.phone,
-      items: createOrderDto.items.map(item => ({
-        ...item,
-        itemId: new Types.ObjectId(item.itemId),
-      })),
-    });
+     const order = new this.orderModel({
+       ...createOrderDto,
+       currency: createOrderDto.currency || 'NGN',
+       userId,
+       fullName: createOrderDto.fullName,
+       email: createOrderDto.email,
+       phone: createOrderDto.phone,
+       items: createOrderDto.items.map(item => ({
+         ...item,
+         itemId: new Types.ObjectId(item.itemId),
+       })),
+     });
 
     const savedOrder = await order.save();
 
