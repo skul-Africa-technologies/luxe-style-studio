@@ -18,14 +18,14 @@ import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
 import Items from "./pages/admin/Items";
 import AddSlideshow from "./pages/admin/AddSlideshow";
-import Slideshow from "./pages/admin/Slideshow";
-import EditSlideshow from "./pages/admin/EditSlideshow";
 
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { SessionProvider } from "@/context/SessionContext";
 
 import { AdminThemeProvider } from "./context/AdminThemeContext";
+import EditItem from "./pages/editItem";
+import SlideshowManagement from "./pages/admin/Slideshow";
 
 const queryClient = new QueryClient();
 
@@ -38,111 +38,109 @@ const App = () => (
             <Toaster />
             <Sonner />
 
-          <BrowserRouter>
-            <Routes>
-              {/* ================= USER ROUTES ================= */}
-              <Route path="/" element={<Index />} />
-              <Route path="/outfit/:id" element={<OutfitDetail />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/wishlist" element={<Wishlist />} />
+            <BrowserRouter>
+              <Routes>
+                {/* ================= USER ROUTES ================= */}
+                <Route path="/" element={<Index />} />
+                <Route path="/outfit/:id" element={<OutfitDetail />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/wishlist" element={<Wishlist />} />
 
-              {/* ================= ADMIN ROUTES ================= */}
-              <Route
-                path="/admin/login"
-                element={
-                  <AdminThemeProvider>
-                    <Login />
-                  </AdminThemeProvider>
-                }
-              />
+                {/* ================= ADMIN ROUTES ================= */}
+                <Route
+                  path="/admin/login"
+                  element={
+                    <AdminThemeProvider>
+                      <Login />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <AdminThemeProvider>
-                    <Dashboard />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <AdminThemeProvider>
+                      <Dashboard />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/items"
-                element={
-                  <AdminThemeProvider>
-                    <Items />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/items"
+                  element={
+                    <AdminThemeProvider>
+                      <Items />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/add-item"
-                element={
-                  <AdminThemeProvider>
-                    <AddItem />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/add-item"
+                  element={
+                    <AdminThemeProvider>
+                      <AddItem />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              {/* Slideshow Routes */}
-              <Route
-                path="/admin/slideshow"
-                element={
-                  <AdminThemeProvider>
-                    <Slideshow />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/add-slideshow"
+                  element={
+                    <AdminThemeProvider>
+                      <AddSlideshow />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/add-slideshow"
-                element={
-                  <AdminThemeProvider>
-                    <AddSlideshow />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/orders"
+                  element={
+                    <AdminThemeProvider>
+                      <Orders />
+                    </AdminThemeProvider>
+                  }
+                />
+                <Route
+                  path="/admin/edit-item/:id"
+                  element={
+                    <AdminThemeProvider>
+                      <EditItem />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/edit-slideshow/:id"
-                element={
-                  <AdminThemeProvider>
-                    <EditSlideshow />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <AdminThemeProvider>
+                      <Users />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/orders"
-                element={
-                  <AdminThemeProvider>
-                    <Orders />
-                  </AdminThemeProvider>
-                }
-              />
+                <Route
+                  path="/admin/settings"
+                  element={
+                    <AdminThemeProvider>
+                      <Settings />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/users"
-                element={
-                  <AdminThemeProvider>
-                    <Users />
-                  </AdminThemeProvider>
-                }
-              />
+                     <Route
+                  path="/admin/slideshow"
+                  element={
+                    <AdminThemeProvider>
+                      <SlideshowManagement />
+                    </AdminThemeProvider>
+                  }
+                />
 
-              <Route
-                path="/admin/settings"
-                element={
-                  <AdminThemeProvider>
-                    <Settings />
-                  </AdminThemeProvider>
-                }
-              />
-
-              {/* ================= FALLBACK ================= */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </WishlistProvider>
+                {/* ================= FALLBACK ================= */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </WishlistProvider>
         </CartProvider>
       </SessionProvider>
     </TooltipProvider>

@@ -57,7 +57,7 @@ export const fetchOutfits = async (
   return items.map((item) => ({
     id: item._id,
     name: item.name,
-    price: `₦${item.price.toFixed(2)}`,
+ price: `₦${item.price.toLocaleString("en-NG")}`,
     image: item.imageUrl,
     description: item.description,
     fabric: item.fabric,
@@ -81,7 +81,7 @@ export const fetchOutfitById = async (
   return {
       id: item._id,
       name: item.name,
-      price: `₦${item.price.toFixed(2)}`,
+     price: `₦${item.price.toLocaleString("en-NG")}`,
       image: item.imageUrl,
       description: item.description,
       fabric: item.fabric ?? "",

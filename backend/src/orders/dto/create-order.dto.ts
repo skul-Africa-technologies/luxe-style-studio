@@ -1,6 +1,14 @@
-import { IsString, IsNumber, IsOptional, IsArray, ValidateNested, Min, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  Min,
+  IsEnum,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class OrderItemDto {
   @ApiProperty()
@@ -49,17 +57,17 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 
-   @ApiProperty({ minimum: 0 })
-   @IsNumber()
-   @Min(0)
-   total: number;
+  @ApiProperty({ minimum: 0 })
+  @IsNumber()
+  @Min(0)
+  total: number;
 
-   @ApiPropertyOptional({ description: 'Currency code', default: 'NGN' })
-   @IsOptional()
-   @IsString()
-   currency?: string;
+  @ApiPropertyOptional({ description: "Currency code", default: "NGN" })
+  @IsOptional()
+  @IsString()
+  currency?: string;
 
-   @ApiPropertyOptional()
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   shippingAddress?: string;
@@ -88,11 +96,18 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({ description: "Size e.g. S, M, L, XL, XXL" }) // ADD
+  @IsOptional() // ADD
+  @IsString() // ADD
+  size?: string; // ADD
 }
 
 export class UpdateOrderStatusDto {
-  @ApiProperty({ enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'] })
-  @IsEnum(['pending', 'paid', 'shipped', 'delivered', 'cancelled'])
+  @ApiProperty({
+    enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
+  })
+  @IsEnum(["pending", "paid", "shipped", "delivered", "cancelled"])
   status: string;
 
   @ApiPropertyOptional()

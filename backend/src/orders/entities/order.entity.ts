@@ -62,6 +62,10 @@ export class Order extends Document {
   @Prop()
   notes?: string;
 
+  
+  @Prop()
+  size?: string;
+
   @Prop({ type: Types.ObjectId, ref: 'Payment', nullable: true })
   paymentId?: Types.ObjectId;
 }

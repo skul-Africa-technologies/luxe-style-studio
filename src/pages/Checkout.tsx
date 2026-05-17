@@ -97,7 +97,6 @@ const Checkout = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -105,9 +104,7 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
-
     setIsSubmitting(true);
 
     try {
@@ -121,16 +118,20 @@ const Checkout = () => {
           itemId: item.id,
           name: item.name,
           quantity: item.quantity,
+          size: item.size ?? null,
           price: parseFloat(item.price.replace(/[^0-9.-]+/g, "")),
         })),
         total: subtotal,
       };
 
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders`, {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/orders`,
+        {
           method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify(orderPayload),
-       });
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        },
+      );
 
       const data = await response.json();
 
@@ -185,8 +186,8 @@ const Checkout = () => {
             </div>
             <div className="space-y-4 pt-4">
               <p className="font-body text-base text-foreground">
-                MATTEEKAY will contact you shortly to confirm your order
-                details and arrange delivery.
+                MATTEEKAY will contact you shortly to confirm your order details
+                and arrange delivery.
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -220,6 +221,7 @@ const Checkout = () => {
             Back
           </motion.button>
         </div>
+
         <div className="max-w-6xl mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
             {/* Checkout Form */}
@@ -255,6 +257,7 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
                 {/* Email */}
                 <div className="space-y-2">
                   <label
@@ -278,6 +281,7 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
                 {/* Phone */}
                 <div className="space-y-2">
                   <label
@@ -292,7 +296,7 @@ const Checkout = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+1 (555) 000-0000 (optional)"
+                    placeholder="+234 (optional)"
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
                   />
                   {errors.phone && (
@@ -301,6 +305,7 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
                 {/* Shipping Address */}
                 <div className="space-y-2">
                   <label
@@ -324,6 +329,7 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
                 {/* Note */}
                 <div className="space-y-2">
                   <label
@@ -342,6 +348,7 @@ const Checkout = () => {
                     className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50 resize-none"
                   />
                 </div>
+
                 {/* Submit */}
                 <motion.button
                   type="submit"
@@ -358,10 +365,11 @@ const Checkout = () => {
                   ) : (
                     "Place Order"
                   )}
-              </motion.button>
+                </motion.button>
+
                 <p className="font-body text-[11px] text-center text-muted-foreground tracking-wider">
                   By placing your order, you agree to receive communication from
-                  MATTEEKAY 
+                  MATTEEKAY
                 </p>
               </form>
             </motion.div>
@@ -379,7 +387,7 @@ const Checkout = () => {
                 </h2>
                 <div className="space-y-4 mb-6">
                   {items.map((item) => (
-                    <div key={item.id} className="flex gap-4">
+                    <div key={`${item.id}__${item.size ?? "none"}`} className="flex gap-4">
                       <div className="w-16 h-20 bg-secondary overflow-hidden flex-shrink-0">
                         <img
                           src={item.image}
@@ -391,28 +399,33 @@ const Checkout = () => {
                         <h3 className="font-display text-sm text-foreground">
                           {item.name}
                         </h3>
+                        {item.size && (
+                          <p className="font-body text-xs text-muted-foreground">
+                            Size: {item.size}
+                          </p>
+                        )}
                         <p className="font-body text-xs text-muted-foreground">
                           Qty: {item.quantity}
                         </p>
                         <p className="font-body text-sm font-medium text-foreground mt-1">
-                          $
-                          {(
+                          ₦{(
                             parseFloat(item.price.replace(/[^0-9.-]+/g, "")) *
                             item.quantity
-                          ).toLocaleString()}
+                          ).toLocaleString("en-NG")}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 <div className="border-t border-border pt-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
                       Subtotal
                     </span>
-                     <span className="font-display text-lg text-foreground">
-                       ₦{subtotal.toLocaleString()}
-                     </span>
+                    <span className="font-display text-lg text-foreground">
+                      ₦{subtotal.toLocaleString("en-NG")}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-body text-sm tracking-wider text-muted-foreground">
@@ -428,7 +441,7 @@ const Checkout = () => {
                       Total
                     </span>
                     <span className="font-display text-xl font-medium text-foreground">
-                      ₦{subtotal.toLocaleString()}
+                      ₦{subtotal.toLocaleString("en-NG")}
                     </span>
                   </div>
                 </div>

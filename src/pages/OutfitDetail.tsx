@@ -19,6 +19,8 @@ interface OutfitDetailType {
   category: string;
 }
 
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
 const OutfitDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -29,6 +31,8 @@ const OutfitDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdded, setIsAdded] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [sizeError, setSizeError] = useState(false);
 
   const isLoved = outfit ? isItemLoved(outfit.id) : false;
 
@@ -36,9 +40,7 @@ const OutfitDetail = () => {
     const load = async () => {
       try {
         const data = await fetchOutfitById(id!);
-
         if (!data) throw new Error("Item not found");
-
         setOutfit(data);
       } catch (err: any) {
         setError(err.message || "Failed to fetch outfit");
@@ -65,6 +67,13 @@ const OutfitDetail = () => {
   const handleAddToCart = () => {
     if (!outfit) return;
 
+    if (!selectedSize) {
+      setSizeError(true);
+      return;
+    }
+
+    setSizeError(false);
+
     addItem({
       id: outfit.id,
       name: outfit.name,
@@ -72,6 +81,7 @@ const OutfitDetail = () => {
       image: outfit.image,
       category: outfit.category,
       style: outfit.style || "",
+      size: selectedSize,
     });
 
     setIsAdded(true);
@@ -79,7 +89,7 @@ const OutfitDetail = () => {
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Hello MATTEEKAY I want to purchase this outfit: ${outfit!.name}. Price: ${outfit!.price}`
+    `Hello MATTEEKAY I want to purchase this outfit: ${outfit!.name}. Size: ${selectedSize ?? "Not selected"}. Price: ${outfit!.price}`
   );
 
   const whatsappUrl = `https://wa.me/1234567890?text=${whatsappMessage}`;
@@ -109,7 +119,15 @@ const OutfitDetail = () => {
             />
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => toggleItem({ id: outfit!.id, name: outfit!.name, price: outfit!.price, image: outfit!.image, category: outfit!.category })}
+              onClick={() =>
+                toggleItem({
+                  id: outfit!.id,
+                  name: outfit!.name,
+                  price: outfit!.price,
+                  image: outfit!.image,
+                  category: outfit!.category,
+                })
+              }
               className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-background transition-colors"
               aria-label={isLoved ? "Remove from wishlist" : "Add to wishlist"}
             >
@@ -134,11 +152,41 @@ const OutfitDetail = () => {
 
             <p className="text-muted-foreground">{outfit!.description}</p>
 
+            {/* Size Selector */}
+            <div className="space-y-3">
+              <p className="uppercase text-xs tracking-widest text-muted-foreground">
+                Select Size
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SIZES.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => {
+                      setSelectedSize(size);
+                      setSizeError(false);
+                    }}
+                    className={`w-12 h-12 border text-xs uppercase tracking-widest transition-all duration-200 ${
+                      selectedSize === size
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-transparent text-foreground border-border hover:border-foreground"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              {sizeError && (
+                <p className="text-xs text-red-500 tracking-wide">
+                  Please select a size before adding to cart
+                </p>
+              )}
+            </div>
+
             {/* Buttons */}
             <div className="space-y-4">
               <button
                 onClick={handleAddToCart}
-                className={`w-full py-4 uppercase text-xs tracking-widest flex items-center justify-center gap-2 ${
+                className={`w-full py-4 uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-colors duration-300 ${
                   isAdded
                     ? "bg-green-700 text-white"
                     : "bg-black text-white"
@@ -158,7 +206,8 @@ const OutfitDetail = () => {
               <a
                 href={whatsappUrl}
                 target="_blank"
-                className="w-full py-4 border text-center uppercase text-xs tracking-widest block"
+                rel="noopener noreferrer"
+                className="w-full py-4 border text-center uppercase text-xs tracking-widest block hover:bg-foreground hover:text-background transition-colors duration-300"
               >
                 Order via WhatsApp
               </a>

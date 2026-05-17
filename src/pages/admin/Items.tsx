@@ -64,7 +64,7 @@ const Items = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const data = await res.json();
       setItems(data.data);
@@ -99,12 +99,15 @@ const Items = () => {
   const handleDeleteConfirm = async () => {
     if (!itemToDelete || !token) return;
     try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/${itemToDelete}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/items/${itemToDelete}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       setItems(items.filter((item) => item._id !== itemToDelete));
     } catch (err) {
       console.error("Failed to delete item:", err);
@@ -140,7 +143,10 @@ const Items = () => {
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+            size={18}
+          />
           <Input
             placeholder="Search items..."
             value={searchQuery}
@@ -161,7 +167,9 @@ const Items = () => {
               <TableRow className="bg-muted/50">
                 <TableHead className="w-20">Thumbnail</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Description</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Description
+                </TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead className="hidden lg:table-cell">Category</TableHead>
                 <TableHead className="text-right w-32">Actions</TableHead>
@@ -185,7 +193,11 @@ const Items = () => {
                         No items found
                       </p>
                       <Link to="/admin/add-item">
-                        <Button variant="outline" size="sm" className="mt-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 gap-2"
+                        >
                           <Plus size={16} />
                           Add your first item
                         </Button>
@@ -217,9 +229,9 @@ const Items = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                         <div className="font-medium font-body">
-                           ₦{item.price.toFixed(2)}
-                         </div>
+                      <div className="font-medium font-body">
+                        ₦{item.price.toLocaleString("en-NG")}
+                      </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -258,13 +270,14 @@ const Items = () => {
           <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
             <div className="text-sm text-muted-foreground font-body">
               Showing {itemsPerPage * (currentPage - 1) + 1} to{" "}
-              {Math.min(itemsPerPage * currentPage, items.length)} of {items.length} items
+              {Math.min(itemsPerPage * currentPage, items.length)} of{" "}
+              {items.length} items
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="h-8 w-8"
               >
@@ -276,7 +289,9 @@ const Items = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="h-8 w-8"
               >
@@ -293,7 +308,8 @@ const Items = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Item</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this item? This action cannot be undone.
+              Are you sure you want to delete this item? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

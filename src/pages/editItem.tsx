@@ -5,19 +5,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { api } from "@/lib/api";
 
-const EditSlideshow = () => {
+const categories = [
+  "Dresses",
+  "Suits",
+  "Casual Wear",
+  "Formal Wear",
+  "Accessories",
+  "Footwear",
+];
+
+const EditItem = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [formData, setFormData] = useState({
-    title: "",
-    displayText: "",
-    order: 0,
-    isActive: true,
-    imageUrl: "", // existing image URL from backend
+    name: "",
+    description: "",
+    price: "",
+    category: "",
+    imageUrl: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -28,43 +44,44 @@ const EditSlideshow = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const token = localStorage.getItem("admin-token");
 
-  // Fetch existing slideshow data
+  // Fetch existing item data
   useEffect(() => {
-    const fetchSlideshow = async () => {
-      const token = localStorage.getItem("admin-token");
-      if (!token) {
-        navigate("/admin/login", { replace: true });
-        return;
-      }
+    if (!token) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
+
+    const fetchItem = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/api/slideshow/${id}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/items/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-        if (!res.ok) throw new Error("Failed to fetch slideshow");
+        if (!res.ok) throw new Error("Failed to fetch item");
         const data = await res.json();
         setFormData({
-          title: data.title ?? "",
-          displayText: data.displayText ?? "",
-          order: data.order ?? 0,
-          isActive: data.isActive ?? true,
+          name: data.name ?? "",
+          description: data.description ?? "",
+          price: String(data.price ?? ""),
+          category: data.category ?? "",
           imageUrl: data.imageUrl ?? "",
         });
         setImagePreview(data.imageUrl ?? null);
       } catch (err) {
-        console.error("Failed to fetch slideshow:", err);
-        alert("Failed to load slideshow data");
-        navigate("/admin/slideshow");
+        console.error("Failed to fetch item:", err);
+        alert("Failed to load item data");
+        navigate("/admin/items");
       } finally {
         setIsFetching(false);
       }
     };
 
-    fetchSlideshow();
-  }, [id, navigate]);
+    fetchItem();
+  }, [id, navigate, token]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -72,6 +89,11 @@ const EditSlideshow = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, category: value }));
+    if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,14 +113,17 @@ const EditSlideshow = () => {
 
   const removeImage = () => {
     setImageFile(null);
-    // Restore original image preview so the slot isn't empty
     setImagePreview(formData.imageUrl || null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) newErrors.title = "Title is required";
+    if (!formData.name.trim()) newErrors.name = "Item name is required";
+    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.price || parseFloat(formData.price) <= 0)
+      newErrors.price = "Price must be greater than 0";
+    if (!formData.category) newErrors.category = "Please select a category";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -110,44 +135,43 @@ const EditSlideshow = () => {
     setIsSubmitting(true);
 
     try {
-      // If a new image was selected, upload it first via POST multipart,
-      // then use the returned imageUrl in the PATCH JSON body.
       let finalImageUrl = formData.imageUrl;
 
+      // If new image selected, upload it first via multipart POST
       if (imageFile) {
         const uploadPayload = new FormData();
-        uploadPayload.append("imageUrl", imageFile);
-        uploadPayload.append("title", formData.title);
-        uploadPayload.append("displayText", formData.displayText);
-        uploadPayload.append("order", String(formData.order));
-        uploadPayload.append("isActive", String(formData.isActive));
+        uploadPayload.append("name", formData.name);
+        uploadPayload.append("description", formData.description);
+        uploadPayload.append("price", formData.price);
+        uploadPayload.append("category", formData.category);
+        uploadPayload.append("image", imageFile);
 
-        // Upload new image — backend returns the new record with imageUrl
-        const uploadRes = await api.post("/api/slideshow", uploadPayload, {
+        const uploadRes = await api.post("/api/items", uploadPayload, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         finalImageUrl = uploadRes.data?.imageUrl ?? finalImageUrl;
       }
 
-      // PATCH endpoint expects JSON body per API spec
-      await api.patch(`/api/slideshow/${id}`, {
-        title: formData.title,
-        displayText: formData.displayText,
-        order: Number(formData.order),
-        isActive: formData.isActive,
-        imageUrl: finalImageUrl,
-      });
+      // PATCH with JSON body per API spec
+      await api.patch(
+        `/api/items/${id}`,
+        {
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          category: formData.category,
+          imageUrl: finalImageUrl,
+        },
+      );
 
       setShowSuccess(true);
-
       setTimeout(() => {
         setShowSuccess(false);
-        navigate("/admin/slideshow");
+        navigate("/admin/items");
       }, 1500);
     } catch (err: any) {
-      console.error("Failed to update slideshow:", err);
-      const message =
-        err.response?.data?.message || "Failed to update slideshow";
+      console.error("Failed to update item:", err);
+      const message = err.response?.data?.message || "Failed to update item";
       alert(message);
     } finally {
       setIsSubmitting(false);
@@ -158,7 +182,7 @@ const EditSlideshow = () => {
     return (
       <AdminLayout>
         <div className="max-w-2xl mx-auto">
-          <p className="text-muted-foreground">Loading slideshow data...</p>
+          <p className="text-muted-foreground">Loading item data...</p>
         </div>
       </AdminLayout>
     );
@@ -167,53 +191,78 @@ const EditSlideshow = () => {
   return (
     <AdminLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="font-brand text-2xl mb-2">Edit Slideshow Image</h1>
-        <p className="text-muted-foreground mb-6">
-          Update slideshow details below
-        </p>
+        <h1 className="font-brand text-2xl mb-2">Edit Item</h1>
+        <p className="text-muted-foreground mb-6">Update item details below</p>
 
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            ✓ Slideshow image updated successfully! Redirecting...
+            ✓ Item updated successfully! Redirecting...
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
+          {/* Name */}
           <div>
-            <Label>Title</Label>
+            <Label>Item Name</Label>
             <Input
-              name="title"
-              value={formData.title}
+              name="name"
+              value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title}</p>
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name}</p>
             )}
           </div>
 
-          {/* Display Text */}
+          {/* Description */}
           <div>
-            <Label>Display Text</Label>
+            <Label>Description</Label>
             <Textarea
-              name="displayText"
-              value={formData.displayText}
+              name="description"
+              value={formData.description}
               onChange={handleInputChange}
             />
-            {errors.displayText && (
-              <p className="text-red-500 text-sm">{errors.displayText}</p>
+            {errors.description && (
+              <p className="text-red-500 text-sm">{errors.description}</p>
             )}
           </div>
 
-          {/* Order */}
-          <div>
-            <Label>Order</Label>
-            <Input
-              name="order"
-              type="number"
-              value={formData.order}
-              onChange={handleInputChange}
-            />
+          {/* Price + Category */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label>Price</Label>
+              <Input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+              />
+              {errors.price && (
+                <p className="text-red-500 text-sm">{errors.price}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={formData.category}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && (
+                <p className="text-red-500 text-sm">{errors.category}</p>
+              )}
+            </div>
           </div>
 
           {/* Image */}
@@ -223,6 +272,7 @@ const EditSlideshow = () => {
               Current image shown below. Upload a new one to replace it.
             </p>
 
+            {/* Current image preview */}
             {imagePreview && !imageFile && (
               <div className="relative mb-3">
                 <img
@@ -233,6 +283,7 @@ const EditSlideshow = () => {
               </div>
             )}
 
+            {/* New image preview */}
             {imageFile && imagePreview ? (
               <div className="relative">
                 <img
@@ -286,12 +337,12 @@ const EditSlideshow = () => {
               disabled={isSubmitting}
               className="font-body uppercase tracking-[0.1em]"
             >
-              {isSubmitting ? "Updating..." : "Update Slideshow"}
+              {isSubmitting ? "Updating..." : "Update Item"}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/admin/slideshow")}
+              onClick={() => navigate("/admin/items")}
               className="font-body uppercase tracking-[0.1em]"
             >
               Cancel
@@ -303,4 +354,4 @@ const EditSlideshow = () => {
   );
 };
 
-export default EditSlideshow;
+export default EditItem;
