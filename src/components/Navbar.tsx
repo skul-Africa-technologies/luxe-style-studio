@@ -5,6 +5,7 @@ import CartDrawer from "./CartDrawer";
 
 const navLinks = [
   { label: "Home", href: "#home" },
+  { label: "Slideshow", href: "#slideshow" },
   { label: "Collection", href: "#collection" },
   { label: "About", href: "#about" },
   { label: "Contact", href: "#contact" },
@@ -22,11 +23,19 @@ const Navbar = () => {
         className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16 md:h-20">
+          
+          {/* Brand */}
           <a
             href="#home"
-            className="font-brand text-2xl md:text-3xl font-bold tracking-[0.2em] text-foreground uppercase"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            className="flex items-center gap-3 font-brand text-2xl md:text-3xl font-bold tracking-[0.2em] text-foreground uppercase"
+            style={{ fontFamily: "Cormorant Garamond, serif" }}
           >
+            <img
+              src="/logo.PNG"
+              alt="MATTEEKAY logo"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+
             MATTEEKAY
           </a>
 
@@ -52,6 +61,7 @@ const Navbar = () => {
             aria-label="Open cart"
           >
             <ShoppingBag size={20} />
+
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: itemCount > 0 ? 1 : 0 }}

@@ -17,6 +17,9 @@ import Orders from "./pages/admin/Orders";
 import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
 import Items from "./pages/admin/Items";
+import AddSlideshow from "./pages/admin/AddSlideshow";
+import Slideshow from "./pages/admin/Slideshow";
+import EditSlideshow from "./pages/admin/EditSlideshow";
 
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -40,10 +43,10 @@ const App = () => (
               {/* ================= USER ROUTES ================= */}
               <Route path="/" element={<Index />} />
               <Route path="/outfit/:id" element={<OutfitDetail />} />
-<Route path="/checkout" element={<Checkout />} />
-               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/wishlist" element={<Wishlist />} />
 
-               {/* ================= ADMIN ROUTES ================= */}
+              {/* ================= ADMIN ROUTES ================= */}
               <Route
                 path="/admin/login"
                 element={
@@ -76,6 +79,34 @@ const App = () => (
                 element={
                   <AdminThemeProvider>
                     <AddItem />
+                  </AdminThemeProvider>
+                }
+              />
+
+              {/* Slideshow Routes */}
+              <Route
+                path="/admin/slideshow"
+                element={
+                  <AdminThemeProvider>
+                    <Slideshow />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/add-slideshow"
+                element={
+                  <AdminThemeProvider>
+                    <AddSlideshow />
+                  </AdminThemeProvider>
+                }
+              />
+
+              <Route
+                path="/admin/edit-slideshow/:id"
+                element={
+                  <AdminThemeProvider>
+                    <EditSlideshow />
                   </AdminThemeProvider>
                 }
               />

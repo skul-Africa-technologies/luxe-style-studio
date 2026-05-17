@@ -15,6 +15,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
+  // ✅ Global API prefix
+  app.setGlobalPrefix('api');
+
   // ✅ Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -39,6 +42,7 @@ async function bootstrap() {
     .addTag('orders', 'Orders management')
     .addTag('payments', 'Payments management')
     .addTag('admin', 'Admin dashboard')
+    .addTag('slideshow', 'Slideshow management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

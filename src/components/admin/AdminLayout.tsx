@@ -26,6 +26,8 @@ const sidebarLinks = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Items", href: "/admin/items", icon: Package },
   { label: "Add Item", href: "/admin/add-item", icon: PlusSquare },
+  { label: "Slideshow", href: "/admin/slideshow", icon: LayoutDashboard },
+  { label: "Add Slideshow", href: "/admin/add-slideshow", icon: PlusSquare },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Settings", href: "/admin/settings", icon: Settings },
