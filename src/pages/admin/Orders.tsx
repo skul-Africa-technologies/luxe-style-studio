@@ -137,7 +137,7 @@ const Orders = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -203,7 +203,7 @@ const Orders = () => {
     if (!token) return;
     setActionLoading(id);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -226,7 +226,7 @@ const Orders = () => {
     
     setActionLoading(id);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

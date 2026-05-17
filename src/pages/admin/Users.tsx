@@ -95,7 +95,7 @@ const Users = () => {
     if (!token) return;
     setLoading(true);
      try {
-       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users`, {
+       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users`, {
          headers: { Authorization: `Bearer ${token}` },
        });
        const data = await res.json();
@@ -151,7 +151,7 @@ const Users = () => {
     if (!userToDelete || !token) return;
     
      try {
-       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/${userToDelete._id}`, {
+       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/${userToDelete._id}`, {
          method: "DELETE",
          headers: { Authorization: `Bearer ${token}` },
        });

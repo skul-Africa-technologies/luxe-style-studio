@@ -115,7 +115,7 @@ const Dashboard = () => {
 
      const fetchDashboard = async () => {
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/dashboard`, {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/dashboard`, {
             headers: {
              Authorization: `Bearer ${token}`,
            },

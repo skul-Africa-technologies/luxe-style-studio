@@ -126,7 +126,7 @@ const Checkout = () => {
         total: subtotal,
       };
 
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders`, {
           method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify(orderPayload),
