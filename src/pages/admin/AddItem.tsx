@@ -16,14 +16,7 @@ import {
 import AdminLayout from "@/components/admin/AdminLayout";
 import { api } from "@/lib/api";
 
-const categories = [
-  "Dresses",
-  "Suits",
-  "Casual Wear",
-  "Formal Wear",
-  "Accessories",
-  "Footwear",
-];
+const categories = ["Cap", "Shirt"];
 
 const AddItem = () => {
   const navigate = useNavigate();

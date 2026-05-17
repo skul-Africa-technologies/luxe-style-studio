@@ -16,12 +16,8 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { api } from "@/lib/api";
 
 const categories = [
-  "Dresses",
-  "Suits",
-  "Casual Wear",
-  "Formal Wear",
-  "Accessories",
-  "Footwear",
+"cap",
+"shirts",
 ];
 
 const EditItem = () => {
