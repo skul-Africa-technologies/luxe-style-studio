@@ -85,13 +85,13 @@ async function fetchApi<T>(
 // User API
 // ====================
 export const userApi = {
-  async getAllUsers(): Promise<ApiResponse<User[]>> {
-    return fetchApi<User[]>('/users');
-  },
+async getAllUsers(): Promise<ApiResponse<User[]>> {
+     return fetchApi<User[]>('/api/users');
+   },
 
-  async getUserById(id: string): Promise<ApiResponse<User>> {
-    return fetchApi<User>(`/users/${id}`);
-  },
+   async getUserById(id: string): Promise<ApiResponse<User>> {
+     return fetchApi<User>(`/api/users/${id}`);
+   },
 
   async getUserByEmail(email: string): Promise<ApiResponse<User | null>> {
     const response = await this.getAllUsers();
@@ -102,21 +102,21 @@ export const userApi = {
     return { success: false, error: response.error || 'User not found' };
   },
 
-  async createOrUpdateUser(
-    id: string,
-    email: string
-  ): Promise<ApiResponse<User>> {
-    return fetchApi<User>(`/users/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ email }),
-    });
-  },
+async createOrUpdateUser(
+     id: string,
+     email: string
+   ): Promise<ApiResponse<User>> {
+     return fetchApi<User>(`/api/users/${id}`, {
+       method: 'PATCH',
+       body: JSON.stringify({ email }),
+     });
+   },
 
-  async deleteUser(id: string): Promise<ApiResponse<void>> {
-    return fetchApi<void>(`/users/${id}`, {
-      method: 'DELETE',
-    });
-  },
+   async deleteUser(id: string): Promise<ApiResponse<void>> {
+     return fetchApi<void>(`/api/users/${id}`, {
+       method: 'DELETE',
+     });
+   },
 };
 
 // ====================

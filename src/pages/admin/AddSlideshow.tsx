@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +13,14 @@ const AddSlideshow = () => {
   const [formData, setFormData] = useState({
     title: "",
     displayText: "",
+    order: 0,
+    isActive: true,
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,14 +37,12 @@ const AddSlideshow = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Basic validation
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file");
       return;
     }
 
     setImageFile(file);
-
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -58,42 +56,39 @@ const AddSlideshow = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.title.trim()) newErrors.title = "Title is required";
-    if (!formData.displayText.trim())
-      newErrors.displayText = "Display text is required";
     if (!imageFile) newErrors.image = "Please upload an image";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
-      // Build FormData for multipart upload
+      // API expects multipart/form-data with field name "imageUrl" for the file
       const formDataPayload = new FormData();
+      formDataPayload.append("imageUrl", "pending"); // satisfies DTO validation, controller overwrites with Cloudinary URL
       formDataPayload.append("title", formData.title);
       formDataPayload.append("displayText", formData.displayText);
+      formDataPayload.append(
+        "order",
+        String(Math.max(0, Number(formData.order))),
+      );
+      formDataPayload.append("isActive", String(formData.isActive));
       formDataPayload.append("image", imageFile!);
 
-      // Send to backend - the backend handles Cloudinary upload
-      await api.post("/slideshow", formDataPayload, {
+      await api.post("/api/slideshow", formDataPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
       setShowSuccess(true);
-      setFormData({
-        title: "",
-        displayText: "",
-      });
+      setFormData({ title: "", displayText: "", order: 0, isActive: true });
       removeImage();
 
       setTimeout(() => {
@@ -102,6 +97,7 @@ const AddSlideshow = () => {
       }, 1500);
     } catch (err: any) {
       console.error("Failed to add slideshow:", err);
+      console.error("Response data:", err.response?.data); // ADD THIS LINE
       const message = err.response?.data?.message || "Failed to add slideshow";
       alert(message);
     } finally {
@@ -132,7 +128,9 @@ const AddSlideshow = () => {
               value={formData.title}
               onChange={handleInputChange}
             />
-            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+            {errors.title && (
+              <p className="text-red-500 text-sm">{errors.title}</p>
+            )}
           </div>
 
           {/* Display Text */}
@@ -148,18 +146,31 @@ const AddSlideshow = () => {
             )}
           </div>
 
+          {/* Order */}
+          <div>
+            <Label>Order</Label>
+            <Input
+              name="order"
+              type="number"
+              value={formData.order}
+              onChange={handleInputChange}
+            />
+          </div>
+
           {/* Image Upload */}
           <div>
             <Label>Image</Label>
 
             {!imagePreview ? (
               <div
-                className="border p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                className="border p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors rounded"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Click to upload</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 5MB</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG, GIF up to 5MB
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -187,7 +198,9 @@ const AddSlideshow = () => {
               </div>
             )}
 
-            {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+            {errors.image && (
+              <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+            )}
           </div>
 
           <div className="flex gap-4">

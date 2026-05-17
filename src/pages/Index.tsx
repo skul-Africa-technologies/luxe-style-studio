@@ -10,8 +10,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
-
-      <SlideshowSection />
+      {/* <SlideshowSection /> */}
       <FeaturedCollectionShowcase />
       <CollectionSection />
       <ContactSection />

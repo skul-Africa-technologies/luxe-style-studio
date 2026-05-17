@@ -59,7 +59,7 @@ const Items = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/items?limit=${itemsPerPage}&page=${page}&search=${search}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/items?limit=${itemsPerPage}&page=${page}&search=${search}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ const Items = () => {
   const handleDeleteConfirm = async () => {
     if (!itemToDelete || !token) return;
     try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/items/${itemToDelete}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/items/${itemToDelete}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

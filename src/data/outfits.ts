@@ -44,7 +44,7 @@ export const fetchOutfits = async (
   page = 1,
   limit = 20
 ): Promise<Outfit[]> => {
-  const res = await api.get("/items", {
+  const res = await api.get("/api/items", {
     params: { page, limit },
   });
 
@@ -72,7 +72,7 @@ export const fetchOutfitById = async (
   id: string
 ): Promise<Outfit | null> => {
   try {
-    const res = await api.get(`/items/${id}`);
+    const res = await api.get(`/api/items/${id}`);
 
     const item: ApiItem = res.data;
 

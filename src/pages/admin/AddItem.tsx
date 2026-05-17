@@ -111,7 +111,7 @@ const AddItem = () => {
       formDataPayload.append("image", imageFile!);
 
       // Send to backend - the backend handles Cloudinary upload
-      await api.post("/items", formDataPayload, {
+      await api.post("/api/items", formDataPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

@@ -9,24 +9,24 @@ export class CreateItemDto {
   @IsString()
   @MinLength(2, { message: 'Name must be at least 2 characters long' })
   @MaxLength(100, { message: 'Name must not exceed 100 characters' })
-  name: string;
+  name?: string;
 
   @ApiProperty({ example: 'Luxurious silk dress perfect for evening occasions', description: 'Item description' })
   @IsString()
   @MinLength(10, { message: 'Description must be at least 10 characters long' })
   @MaxLength(2000, { message: 'Description must not exceed 2000 characters' })
-  description: string;
+  description?: string;
 
   @ApiProperty({ example: 299.99, description: 'Item price in USD' })
   @IsNumber()
   @Min(0, { message: 'Price must be a positive number' })
-  price: number;
+  price?: number;
 
   @ApiProperty({ example: 'Dresses', description: 'Item category' })
   @IsString()
   @MinLength(2, { message: 'Category must be at least 2 characters long' })
   @MaxLength(50, { message: 'Category must not exceed 50 characters' })
-  category: string;
+  category?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
