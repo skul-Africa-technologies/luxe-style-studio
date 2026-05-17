@@ -15,10 +15,7 @@ import {
 import AdminLayout from "@/components/admin/AdminLayout";
 import { api } from "@/lib/api";
 
-const categories = [
-"cap",
-"shirts",
-];
+const categories = ["cap", "shirts"];
 
 const EditItem = () => {
   const navigate = useNavigate();
@@ -116,10 +113,11 @@ const EditItem = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = "Item name is required";
-    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
+
     if (!formData.price || parseFloat(formData.price) <= 0)
       newErrors.price = "Price must be greater than 0";
-    if (!formData.category) newErrors.category = "Please select a category";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -149,16 +147,13 @@ const EditItem = () => {
       }
 
       // PATCH with JSON body per API spec
-      await api.patch(
-        `/api/items/${id}`,
-        {
-          name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price),
-          category: formData.category,
-          imageUrl: finalImageUrl,
-        },
-      );
+      await api.patch(`/api/items/${id}`, {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        imageUrl: finalImageUrl,
+      });
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -248,6 +243,7 @@ const EditItem = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}

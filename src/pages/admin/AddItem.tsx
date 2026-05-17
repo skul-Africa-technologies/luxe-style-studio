@@ -80,7 +80,6 @@ const AddItem = () => {
       newErrors.description = "Description is required";
     if (!formData.price || parseFloat(formData.price) <= 0)
       newErrors.price = "Price must be greater than 0";
-    if (!formData.category) newErrors.category = "Please select a category";
     if (!imageFile) newErrors.image = "Please upload an image";
 
     setErrors(newErrors);
@@ -136,9 +135,7 @@ const AddItem = () => {
     <AdminLayout>
       <div className="max-w-2xl mx-auto">
         <h1 className="font-brand text-2xl mb-2">Add New Item</h1>
-        <p className="text-muted-foreground mb-6">
-          Fill in item details below
-        </p>
+        <p className="text-muted-foreground mb-6">Fill in item details below</p>
 
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -155,7 +152,9 @@ const AddItem = () => {
               value={formData.name}
               onChange={handleInputChange}
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -181,7 +180,9 @@ const AddItem = () => {
                 value={formData.price}
                 onChange={handleInputChange}
               />
-              {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
+              {errors.price && (
+                <p className="text-red-500 text-sm">{errors.price}</p>
+              )}
             </div>
 
             <div>
@@ -194,6 +195,7 @@ const AddItem = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -218,7 +220,9 @@ const AddItem = () => {
               >
                 <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Click to upload</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 5MB</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG, GIF up to 5MB
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -246,7 +250,9 @@ const AddItem = () => {
               </div>
             )}
 
-            {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+            {errors.image && (
+              <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+            )}
           </div>
 
           <div className="flex gap-4">
