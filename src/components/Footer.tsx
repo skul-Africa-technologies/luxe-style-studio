@@ -11,12 +11,12 @@ const footerLinks = [
 const socialLinks = [
   {
     label: "Instagram",
-    href: "https://instagram.com",
+    href: "https://www.instagram.com/matteekayofficial",
     icon: <Instagram size={18} />,
   },
   {
     label: "TikTok",
-    href: "https://tiktok.com",
+    href: "https://www.tiktok.com/@matteekayofficial",
     icon: (
       <svg
         viewBox="0 0 24 24"

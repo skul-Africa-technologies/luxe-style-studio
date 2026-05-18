@@ -26,6 +26,7 @@ import { SessionProvider } from "@/context/SessionContext";
 import { AdminThemeProvider } from "./context/AdminThemeContext";
 import EditItem from "./pages/editItem";
 import SlideshowManagement from "./pages/admin/Slideshow";
+import AdminVariantManager from "./pages/admin/AdminVariantManager";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,14 @@ const App = () => (
                   element={
                     <AdminThemeProvider>
                       <EditItem />
+                    </AdminThemeProvider>
+                  }
+                />
+                <Route
+                  path="/admin/manage-variants/:id"
+                  element={
+                    <AdminThemeProvider>
+                      <AdminVariantManager />
                     </AdminThemeProvider>
                   }
                 />

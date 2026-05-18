@@ -145,7 +145,7 @@ Website Contact Form`
         >
           {/* Instagram */}
           <a
-            href="https://instagram.com"
+          href="https://www.instagram.com/matteekayofficial"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"

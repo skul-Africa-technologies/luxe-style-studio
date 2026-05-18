@@ -7,6 +7,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,28 +164,28 @@ const Items = () => {
       <div className="border border-border rounded-lg bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-20">Thumbnail</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Description
-                </TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="hidden lg:table-cell">Category</TableHead>
-                <TableHead className="text-right w-32">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+             <TableHeader>
+               <TableRow className="bg-muted/50">
+                 <TableHead className="w-20">Thumbnail</TableHead>
+                 <TableHead>Name</TableHead>
+                 <TableHead className="hidden md:table-cell">
+                   Description
+                 </TableHead>
+                 <TableHead>Price</TableHead>
+                 <TableHead className="hidden lg:table-cell">Category</TableHead>
+                 <TableHead className="text-right w-36">Actions</TableHead>
+               </TableRow>
+             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12">
+                  <TableCell colSpan={7} className="text-center py-12">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12">
+                  <TableCell colSpan={7} className="text-center py-12">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                         <Search className="text-muted-foreground" size={24} />
@@ -233,11 +234,40 @@ const Items = () => {
                         ₦{item.price.toLocaleString("en-NG")}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {item.category}
-                      </div>
-                    </TableCell>
+                     <TableCell className="hidden lg:table-cell">
+                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                         {item.category}
+                       </div>
+                     </TableCell>
+                     <TableCell className="text-right">
+                       <div className="flex items-center justify-end gap-2">
+                         <Button
+                           variant="ghost"
+                           size="icon"
+                           onClick={() => handleEdit(item._id)}
+                           className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                         >
+                           <Edit size={16} />
+                         </Button>
+                         <Button
+                           variant="ghost"
+                           size="icon"
+                           onClick={() => handleDeleteClick(item._id)}
+                           className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                         >
+                           <Trash2 size={16} />
+                         </Button>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           className="gap-1.5 h-8 text-xs rounded-full"
+                           onClick={() => navigate(`/admin/manage-variants/${item._id}`)}
+                         >
+                           <Settings size={12} />
+                           Manage Variants
+                         </Button>
+                       </div>
+                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button

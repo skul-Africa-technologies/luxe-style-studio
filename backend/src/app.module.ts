@@ -8,6 +8,7 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { SlideshowModule } from './slideshow/slideshow.module';
+import { ProductVariantsModule } from './product-variants/product-variants.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SlideshowModule } from './slideshow/slideshow.module';
     // Feature modules
     AuthModule,
     ItemsModule,
+    ProductVariantsModule,
     UsersModule,
     OrdersModule,
     PaymentsModule,

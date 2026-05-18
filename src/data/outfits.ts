@@ -24,6 +24,18 @@ export interface ApiItem {
   style?: string;
 }
 
+export interface ApiItemWithVariants extends ApiItem {
+  variants: {
+    _id: string;
+    color?: string;
+    size?: string;
+    image: string;
+    stock: number;
+    price: number;
+    sku?: string;
+  }[];
+}
+
 /* ================= ENV SAFETY ================= */
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -57,7 +69,7 @@ export const fetchOutfits = async (
   return items.map((item) => ({
     id: item._id,
     name: item.name,
- price: `₦${item.price.toLocaleString("en-NG")}`,
+    price: `₦${item.price.toLocaleString("en-NG")}`,
     image: item.imageUrl,
     description: item.description,
     fabric: item.fabric,
@@ -66,27 +78,28 @@ export const fetchOutfits = async (
   }));
 };
 
-/* ================= SINGLE ITEM ================= */
+/* ================= SINGLE ITEM (with variants) ================= */
 
 export const fetchOutfitById = async (
   id: string
-): Promise<Outfit | null> => {
+): Promise<Outfit & { variants: ApiItemWithVariants["variants"] } | null> => {
   try {
-    const res = await api.get(`/api/items/${id}`);
+    const res = await api.get<ApiItemWithVariants>(`/api/items/${id}`);
 
-    const item: ApiItem = res.data;
+    const item: ApiItemWithVariants = res.data;
 
     if (!item || !item._id) return null;
 
-  return {
+    return {
       id: item._id,
       name: item.name,
-     price: `₦${item.price.toLocaleString("en-NG")}`,
+      price: `₦${item.price.toLocaleString("en-NG")}`,
       image: item.imageUrl,
       description: item.description,
       fabric: item.fabric ?? "",
       style: item.style ?? "",
       category: item.category,
+      variants: item.variants ?? [],
     };
   } catch (err) {
     console.error("fetchOutfitById error:", err);

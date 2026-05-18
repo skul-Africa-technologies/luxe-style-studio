@@ -9,6 +9,8 @@ export interface CartItem {
   size?: string; // e.g. S, M, L, XL, XXL
   category?: string;
   style?: string;
+  color?: string; // variant colour
+  variantId?: string; // backend variant ObjectId
 }
 
 interface CartState {
@@ -18,8 +20,8 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "REMOVE_ITEM"; payload: { id: string; size?: string } }
-  | { type: "UPDATE_QUANTITY"; payload: { id: string; size?: string; quantity: number } }
+  | { type: "REMOVE_ITEM"; payload: { id: string; size?: string; color?: string } }
+  | { type: "UPDATE_QUANTITY"; payload: { id: string; size?: string; color?: string; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "TOGGLE_CART" }
   | { type: "OPEN_CART" }
@@ -29,8 +31,8 @@ type CartAction =
 interface CartContextType {
   state: CartState;
   addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (id: string, size?: string) => void;
-  updateQuantity: (id: string, quantity: number, size?: string) => void;
+  removeItem: (id: string, size?: string, color?: string) => void;
+  updateQuantity: (id: string, quantity: number, size?: string, color?: string) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;
@@ -67,22 +69,30 @@ const initialState: CartState = {
   isOpen: false,
 };
 
-// Unique key per item+size combination
-const itemKey = (id: string, size?: string) => `${id}__${size ?? "none"}`;
+// Unique key per product+size+color combination
+const itemKey = (id: string, size?: string, color?: string) =>
+  `${id}__${size ?? "none"}__${color ?? "none"}`;
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
-      const key = itemKey(action.payload.id, action.payload.size);
+      const key = itemKey(
+        action.payload.id,
+        action.payload.size,
+        action.payload.color,
+      );
       const existingIndex = state.items.findIndex(
-        (item) => itemKey(item.id, item.size) === key
+        (item) =>
+          itemKey(item.id, item.size, item.color) === key,
       );
 
       if (existingIndex > -1) {
         const updatedItems = [...state.items];
         updatedItems[existingIndex] = {
           ...updatedItems[existingIndex],
-          quantity: updatedItems[existingIndex].quantity + action.payload.quantity,
+          quantity:
+            updatedItems[existingIndex].quantity +
+            action.payload.quantity,
         };
         return { ...state, items: updatedItems };
       }
@@ -91,17 +101,28 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     case "REMOVE_ITEM": {
-      const key = itemKey(action.payload.id, action.payload.size);
+      const key = itemKey(
+        action.payload.id,
+        action.payload.size,
+        action.payload.color,
+      );
       return {
         ...state,
-        items: state.items.filter((item) => itemKey(item.id, item.size) !== key),
+        items: state.items.filter(
+          (item) =>
+            itemKey(item.id, item.size, item.color) !== key,
+        ),
       };
     }
 
     case "UPDATE_QUANTITY": {
-      const key = itemKey(action.payload.id, action.payload.size);
+      const key = itemKey(
+        action.payload.id,
+        action.payload.size,
+        action.payload.color,
+      );
       const updatedItems = state.items.map((item) =>
-        itemKey(item.id, item.size) === key
+        itemKey(item.id, item.size, item.color) === key
           ? { ...item, quantity: Math.max(1, action.payload.quantity) }
           : item
       );
