@@ -3,7 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ProductVariant } from '../entities/product-variant.entity';
 import { CreateProductVariantDto, UpdateProductVariantDto } from '../dto';
-import { ItemService } from '../../items/services/items.service';
+import { ItemsService } from '@/items/services/items.service';
+
 
 /**
  * ProductVariantsService
@@ -16,7 +17,7 @@ export class ProductVariantsService {
   constructor(
     @InjectModel(ProductVariant.name)
     private readonly variantModel: Model<ProductVariant>,
-    private readonly itemsService: ItemService,
+    private readonly itemsService: ItemsService,
   ) {}
 
   /**

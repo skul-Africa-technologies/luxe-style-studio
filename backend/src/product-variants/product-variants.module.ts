@@ -8,6 +8,7 @@ import {
   ProductVariantSchema,
 } from './entities/product-variant.entity';
 import { ItemsModule } from '../items/items.module';
+import { JwtModule } from '@nestjs/jwt';
 
 /**
  * ProductVariantsModule
@@ -20,6 +21,12 @@ import { ItemsModule } from '../items/items.module';
     MongooseModule.forFeature([{ name: ProductVariant.name, schema: ProductVariantSchema }]),
     // ItemsModule gives access to the parent Item store
     ItemsModule,
+
+      JwtModule.register({
+          secret: process.env.JWT_SECRET || 'supersecretkey',
+          signOptions: { expiresIn: '7d' },
+        }),
+
   ],
   controllers: [ProductVariantsController],
   providers: [ProductVariantsService],

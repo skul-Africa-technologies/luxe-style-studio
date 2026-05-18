@@ -5,24 +5,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { ItemsController } from './controllers/items.controller';
 import { ItemsService } from './services/items.service';
 import { Item, ItemSchema } from './entities/item.entity';
+import { ProductVariant, ProductVariantSchema } from '@/product-variants/entities';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Item.name, schema: ItemSchema },
+      { name: ProductVariant.name, schema: ProductVariantSchema }, // add
     ]),
-
-    // ✅ Proper JWT Module Import
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'supersecretkey',
       signOptions: { expiresIn: '7d' },
     }),
   ],
-
   controllers: [ItemsController],
-
   providers: [ItemsService],
-
   exports: [ItemsService],
 })
 export class ItemsModule {}
