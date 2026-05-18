@@ -46,32 +46,32 @@ const EditItem = () => {
       return;
     }
 
-     const fetchItem = async () => {
-       try {
-         const res = await fetch(
-           `${import.meta.env.VITE_API_BASE_URL}/api/items/${id}`,
-           {
-             headers: { Authorization: `Bearer ${token}` },
-           },
-         );
-         if (!res.ok) throw new Error("Failed to fetch item");
-         const data = await res.json();
-         setFormData({
-           name: data.name ?? "",
-           description: data.description ?? "",
-           price: String(data.price ?? ""),
-           category: data.category,
-           imageUrl: data.imageUrl ?? "",
-         });
-         setImagePreview(data.imageUrl ?? null);
-       } catch (err) {
-         console.error("Failed to fetch item:", err);
-         alert("Failed to load item data");
-         navigate("/admin/items");
-       } finally {
-         setIsFetching(false);
-       }
-     };
+    const fetchItem = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/items/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (!res.ok) throw new Error("Failed to fetch item");
+        const data = await res.json();
+        setFormData({
+          name: data.name ?? "",
+          description: data.description ?? "",
+          price: String(data.price ?? ""),
+          category: data.category,
+          imageUrl: data.imageUrl ?? "",
+        });
+        setImagePreview(data.imageUrl ?? null);
+      } catch (err) {
+        console.error("Failed to fetch item:", err);
+        alert("Failed to load item data");
+        navigate("/admin/items");
+      } finally {
+        setIsFetching(false);
+      }
+    };
 
     fetchItem();
   }, [id, navigate, token]);
@@ -84,11 +84,11 @@ const EditItem = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-const handleCategoryChange = (value: string) => {
-  const categoryValue = value === "none" ? null : value;
-  setFormData((prev) => ({ ...prev, category: categoryValue }));
-  if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
-};
+  const handleCategoryChange = (value: string) => {
+    const categoryValue = value === "none" ? null : value;
+    setFormData((prev) => ({ ...prev, category: categoryValue }));
+    if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,18 +111,18 @@ const handleCategoryChange = (value: string) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-   const validateForm = () => {
-     const newErrors: Record<string, string> = {};
-     if (!formData.name.trim()) newErrors.name = "Item name is required";
-     if (!formData.description.trim())
-       newErrors.description = "Description is required";
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = "Item name is required";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
 
-     if (!formData.price || parseFloat(formData.price) <= 0)
-       newErrors.price = "Price must be greater than 0";
-     // Category is now optional, so no validation needed
-     setErrors(newErrors);
-     return Object.keys(newErrors).length === 0;
-   };
+    if (!formData.price || parseFloat(formData.price) <= 0)
+      newErrors.price = "Price must be greater than 0";
+    // Category is now optional, so no validation needed
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +164,7 @@ const handleCategoryChange = (value: string) => {
       }, 1500);
     } catch (err: any) {
       console.error("Failed to update item:", err);
+      console.error("Response data:", err.response?.data); // ADD THIS
       const message = err.response?.data?.message || "Failed to update item";
       alert(message);
     } finally {

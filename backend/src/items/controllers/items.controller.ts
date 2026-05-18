@@ -22,6 +22,43 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   /**
+   * Upload image to Cloudinary (Admin only)
+   * POST /items/upload-image
+   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/^image\/(jpeg|png|gif|webp)$/)) {
+        callback(new BadRequestException('Only image files are allowed'), false);
+      } else {
+        callback(null, true);
+      }
+    },
+  }))
+  @ApiOperation({ summary: 'Upload image', description: 'Upload image to Cloudinary (Admin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Image uploaded successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid file' })
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    // Upload to Cloudinary with specific folder for variants
+    const uploadResult = await this.itemsService.uploadImage(file, 'luxe-style-studio/variants');
+    // Return just the url and publicId as requested
+    return {
+      url: uploadResult.url,
+      publicId: uploadResult.publicId
+    };
+  }
+
+  /**
    * Create a new item (Admin only)
    * POST /items
    */

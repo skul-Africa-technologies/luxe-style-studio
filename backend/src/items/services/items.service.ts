@@ -90,27 +90,27 @@ export class ItemsService {
      return this.itemModel.distinct('category', { isActive: true, category: { $ne: null } });
    }
 
-  async uploadImage(file: Express.Multer.File): Promise<{ url: string; publicId: string }> {
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'luxe-style-studio',
-          resource_type: 'image',
-          transformation: [
-            { width: 800, height: 800, crop: 'limit' },
-            { quality: 'auto:good' },
-            { fetch_format: 'auto' },
-          ],
-        },
-        (error, result) => {
-          if (error) reject(new BadRequestException('Failed to upload image to Cloudinary'));
-          else if (result) resolve({ url: result.secure_url, publicId: result.public_id });
-          else reject(new BadRequestException('No result from Cloudinary'));
-        },
-      );
-      uploadStream.end(file.buffer);
-    });
-  }
+   async uploadImage(file: Express.Multer.File, folder: string = 'luxe-style-studio'): Promise<{ url: string; publicId: string }> {
+     return new Promise((resolve, reject) => {
+       const uploadStream = cloudinary.uploader.upload_stream(
+         {
+           folder: folder,
+           resource_type: 'image',
+           transformation: [
+             { width: 800, height: 800, crop: 'limit' },
+             { quality: 'auto:good' },
+             { fetch_format: 'auto' },
+           ],
+         },
+         (error, result) => {
+           if (error) reject(new BadRequestException('Failed to upload image to Cloudinary'));
+           else if (result) resolve({ url: result.secure_url, publicId: result.public_id });
+           else reject(new BadRequestException('No result from Cloudinary'));
+         },
+       );
+       uploadStream.end(file.buffer);
+     });
+   }
 
   async deleteImage(publicId: string): Promise<void> {
     try { await cloudinary.uploader.destroy(publicId); }

@@ -33,7 +33,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { api, fetchProductWithVariants, fetchVariantsForProduct } from "@/lib/api";
+import {
+  api,
+  fetchProductWithVariants,
+  fetchVariantsForProduct,
+  uploadVariantImage,
+} from "@/lib/api";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -181,7 +186,7 @@ const AdminVariantManager = () => {
     if (!form.price || parseFloat(form.price) <= 0) {
       errs.price = "Price must be greater than 0";
     }
-    if (!form.imagePreview) {
+    if (!editingId && !form.imageFile) {
       errs.image = "Image is required";
     }
     setFormErrors(errs);
@@ -196,38 +201,43 @@ const AdminVariantManager = () => {
     setIsSubmitting(true);
 
     try {
-      const payload: Record<string, unknown> = {
+      let imageUrl = form.imagePreview ?? "";
+
+      // If a new file was selected, upload it first to get the Cloudinary URL
+      if (form.imageFile) {
+        setUploadingImage(true);
+        const uploaded = await uploadVariantImage(form.imageFile);
+        imageUrl = uploaded.url;
+        setUploadingImage(false);
+      }
+
+      const payload = {
         productId: id,
         color: form.color || undefined,
         size: form.size || undefined,
         stock: parseInt(form.stock, 10) || 0,
         price: parseFloat(form.price),
         sku: form.sku || undefined,
-        image: form.imagePreview,
+        image: imageUrl, // string URL
       };
 
       if (editingId) {
-        // PATCH to update
-        await api.patch(`/product-variants/${editingId}`, payload);
+        await api.patch(`/api/product-variants/${editingId}`, payload);
       } else {
-        // POST to create
-        await api.post("/product-variants", payload);
+        await api.post("/api/product-variants", payload);
       }
 
-      // Refresh variants
       const v = await fetchVariantsForProduct(id);
       setVariants(v);
-
       setEditingId(null);
       resetForm();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to save variant";
-      alert(
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        msg,
-      );
+      console.error("Variant error:", err);
+      console.error("Response:", (err as any)?.response?.data);
+      alert((err as any)?.response?.data?.message || "Failed to save variant");
     } finally {
       setIsSubmitting(false);
+      setUploadingImage(false);
     }
   };
 
@@ -305,9 +315,7 @@ const AdminVariantManager = () => {
           <div className="py-16 text-center text-muted-foreground">
             <Settings className="mx-auto mb-3 h-8 w-8 opacity-40" />
             <p>No variants yet</p>
-            <p className="text-sm mt-1">
-              Add your first variant below
-            </p>
+            <p className="text-sm mt-1">Add your first variant below</p>
           </div>
         ) : (
           <Table>
@@ -354,8 +362,8 @@ const AdminVariantManager = () => {
                         variant.stock === 0
                           ? "text-red-500"
                           : variant.stock <= 5
-                          ? "text-amber-600"
-                          : "text-green-600"
+                            ? "text-amber-600"
+                            : "text-green-600"
                       }
                     >
                       {variant.stock}
@@ -516,11 +524,7 @@ const AdminVariantManager = () => {
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Saving…" : "Save Changes"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={cancelEdit}
-                >
+                <Button type="button" variant="outline" onClick={cancelEdit}>
                   Cancel
                 </Button>
               </>
@@ -530,12 +534,12 @@ const AdminVariantManager = () => {
                   <Plus size={16} className="mr-1" />
                   {isSubmitting ? "Adding…" : "Add Variant"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/admin/items")}
-                >
-                  Back to Items
+                <Button type="submit" disabled={isSubmitting || uploadingImage}>
+                  {uploadingImage
+                    ? "Uploading image…"
+                    : isSubmitting
+                      ? "Adding…"
+                      : "Add Variant"}
                 </Button>
               </>
             )}
@@ -549,8 +553,8 @@ const AdminVariantManager = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Variant</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this variant? This action
-              cannot be undone.
+              Are you sure you want to delete this variant? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
