@@ -234,11 +234,11 @@ const Items = () => {
                         ₦{item.price.toLocaleString("en-NG")}
                       </div>
                     </TableCell>
-                     <TableCell className="hidden lg:table-cell">
-                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                         {item.category}
-                       </div>
-                     </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                          {item.category ?? 'None'}
+                        </div>
+                      </TableCell>
                      <TableCell className="text-right">
                        <div className="flex items-center justify-end gap-2">
                          <Button

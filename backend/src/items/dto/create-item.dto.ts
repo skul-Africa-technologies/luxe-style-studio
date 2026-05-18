@@ -22,11 +22,12 @@ export class CreateItemDto {
   @Min(0, { message: 'Price must be a positive number' })
   price?: number;
 
-  @ApiProperty({ example: 'Dresses', description: 'Item category' })
-  @IsString()
-  @MinLength(2, { message: 'Category must be at least 2 characters long' })
-  @MaxLength(50, { message: 'Category must not exceed 50 characters' })
-  category?: string;
+@ApiProperty({ example: 'Dresses', description: 'Item category' })
+@IsString()
+@MinLength(2, { message: 'Category must be at least 2 characters long' })
+@MaxLength(50, { message: 'Category must not exceed 50 characters' })
+@IsOptional()
+category?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -54,10 +55,10 @@ export class UpdateItemDto extends PartialType(CreateItemDto) {
   @Min(0)
   price?: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  category?: string;
+@ApiPropertyOptional()
+@IsOptional()
+@IsString()
+category?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -86,9 +86,9 @@ export class ItemsService {
     return item;
   }
 
-  async getCategories(): Promise<string[]> {
-    return this.itemModel.distinct('category', { isActive: true });
-  }
+   async getCategories(): Promise<string[]> {
+     return this.itemModel.distinct('category', { isActive: true, category: { $ne: null } });
+   }
 
   async uploadImage(file: Express.Multer.File): Promise<{ url: string; publicId: string }> {
     return new Promise((resolve, reject) => {

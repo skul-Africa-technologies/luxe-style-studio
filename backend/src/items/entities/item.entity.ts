@@ -12,8 +12,8 @@ export class Item extends Document {
   @Prop({ required: true, min: 0 })
   price: number;
 
-  @Prop({ required: true })
-  category: string;
+@Prop({ required: false, default: null })
+category: string | null;
 
   @Prop({ required: true })
   imageUrl: string;
@@ -28,4 +28,4 @@ export class Item extends Document {
 export const ItemSchema = SchemaFactory.createForClass(Item);
 
 // Create text index for search functionality
-ItemSchema.index({ name: 'text', description: 'text', category: 'text' });
+ItemSchema.index({ name: 'text', description: 'text' });

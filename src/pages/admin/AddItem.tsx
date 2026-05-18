@@ -20,12 +20,12 @@ const categories = ["Cap", "Shirt"];
 
 const AddItem = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    category: "",
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  description: "",
+  price: "",
+  category: null,
+});
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -44,10 +44,11 @@ const AddItem = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleCategoryChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, category: value }));
-    if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
-  };
+const handleCategoryChange = (value: string) => {
+  const categoryValue = value === "none" ? null : value;
+  setFormData((prev) => ({ ...prev, category: categoryValue }));
+  if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
+};
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
