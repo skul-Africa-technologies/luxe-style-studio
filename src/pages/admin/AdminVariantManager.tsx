@@ -3,9 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   X,
-  Settings,
-  Trash2,
   Edit,
+  Trash2,
   Upload,
   Package,
 } from "lucide-react";
@@ -34,7 +33,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import AdminLayout from "@/components/admin/AdminLayout";
-import { api, fetchProductWithVariants } from "@/lib/api";
+import {
+  api,
+  fetchProductWithVariants,
+  fetchVariantsForProduct,
+  createVariant,
+  updateVariant,
+  deleteVariant,
+  uploadVariantImage,
+} from "@/lib/api";
 import { AlertDialogAction } from "@radix-ui/react-alert-dialog";
 
 /* ────────────────────────────────────────────────────────── */
@@ -99,6 +106,7 @@ const AdminVariantManager = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,8 +125,8 @@ const AdminVariantManager = () => {
         const productData = await fetchProductWithVariants(id);
         setProduct(productData as unknown as Product);
 
-        const res = await api.get(`/api/product-variants?productId=${id}`);
-        setVariants(Array.isArray(res.data) ? res.data : []);
+        const productVariants = await fetchVariantsForProduct(id);
+        setVariants(productVariants);
       } catch {
         navigate("/admin/items");
       } finally {
@@ -166,6 +174,13 @@ const AdminVariantManager = () => {
   const resetForm = () => {
     setForm({ ...EMPTY_FORM });
     setFormErrors({});
+  };
+
+  const refreshVariants = async () => {
+    if (id) {
+      const productVariants = await fetchVariantsForProduct(id);
+      setVariants(productVariants);
+    }
   };
 
   const startEdit = (variant: Variant) => {
@@ -219,41 +234,33 @@ const AdminVariantManager = () => {
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-
-      formData.append("productId", id);
-      formData.append("price", form.price);
-
-      if (form.color) formData.append("color", form.color);
-      if (form.size) formData.append("size", form.size);
-      if (form.stock) formData.append("stock", form.stock);
-      if (form.sku) formData.append("sku", form.sku);
+      let imageUrl = form.imagePreview;
 
       if (form.imageFile) {
-        formData.append("image", form.imageFile);
+        setUploadingImage(true);
+        const uploadResult = await uploadVariantImage(form.imageFile);
+        imageUrl = uploadResult.url;
+        setUploadingImage(false);
       }
 
-      const url = editingId
-        ? `/api/product-variants/${editingId}`
-        : `/api/product-variants`;
+      const variantData = {
+        color: form.color || undefined,
+        size: form.size || undefined,
+        image: imageUrl!,
+        stock: form.stock ? parseInt(form.stock, 10) : 0,
+        price: parseFloat(form.price),
+        sku: form.sku || undefined,
+      };
 
       if (editingId) {
-        await api.patch(url, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await updateVariant(editingId, variantData);
       } else {
-        await api.post(url, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await createVariant(id, variantData);
       }
 
-      const res = await api.get(`/api/product-variants?productId=${id}`);
-      setVariants(Array.isArray(res.data) ? res.data : []);
-
+      await refreshVariants();
       resetForm();
       setEditingId(null);
-
-      alert(editingId ? "Updated successfully" : "Created successfully");
     } catch (err) {
       console.error(err);
       alert("Failed to save variant");
@@ -270,10 +277,8 @@ const AdminVariantManager = () => {
     if (!variantToDelete) return;
 
     try {
-      await api.delete(`/api/product-variants/${variantToDelete}`);
-
-      const res = await api.get(`/api/product-variants?productId=${id}`);
-      setVariants(Array.isArray(res.data) ? res.data : []);
+      await deleteVariant(variantToDelete);
+      await refreshVariants();
     } catch {
       alert("Delete failed");
     } finally {
@@ -364,11 +369,17 @@ const AdminVariantManager = () => {
         </Table>
       </div>
 
-      {/* ───────── FORM (RESTORED FULLY) ───────── */}
+      {/* ───────── FORM ───────── */}
       <div className="border rounded p-6">
         <h2 className="mb-4">
           {editingId ? "Edit Variant" : "Add Variant"}
         </h2>
+
+        {editingId && (
+          <Button onClick={cancelEdit} variant="outline" size="sm" className="mb-4">
+            Cancel Edit
+          </Button>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -415,7 +426,7 @@ const AdminVariantManager = () => {
             />
           </div>
 
-          {/* IMAGE UPLOAD RESTORED */}
+          {/* IMAGE UPLOAD */}
           <div>
             <input
               type="file"
@@ -456,8 +467,8 @@ const AdminVariantManager = () => {
             )}
           </div>
 
-          <Button type="submit" disabled={isSubmitting}>
-            {editingId ? "Update" : "Create"}
+          <Button type="submit" disabled={isSubmitting || uploadingImage}>
+            {isSubmitting || uploadingImage ? "Saving..." : editingId ? "Update" : "Create"}
           </Button>
         </form>
       </div>

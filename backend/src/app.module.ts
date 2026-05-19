@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
@@ -9,6 +9,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { SlideshowModule } from './slideshow/slideshow.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
+
 
 @Module({
   imports: [
@@ -22,12 +23,13 @@ import { ProductVariantsModule } from './product-variants/product-variants.modul
     // Feature modules
     AuthModule,
     ItemsModule,
-    ProductVariantsModule,
+
     UsersModule,
     OrdersModule,
     PaymentsModule,
     AdminModule,
-    SlideshowModule,
+SlideshowModule,
+    ProductVariantsModule,
   ],
 })
 export class AppModule {}

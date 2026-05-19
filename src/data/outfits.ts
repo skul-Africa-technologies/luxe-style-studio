@@ -84,11 +84,19 @@ export const fetchOutfitById = async (
   id: string
 ): Promise<Outfit & { variants: ApiItemWithVariants["variants"] } | null> => {
   try {
-    const res = await api.get<ApiItemWithVariants>(`/api/items/${id}`);
+    const res = await api.get<ApiItem>(`/api/items/${id}`);
 
-    const item: ApiItemWithVariants = res.data;
+    const item: ApiItem = res.data;
 
     if (!item || !item._id) return null;
+
+    // Fetch variants separately via the single source-of-truth endpoint
+    const variantsRes = await api.get<ApiItemWithVariants["variants"]>(
+      `/api/product-variants/product/${id}`,
+    );
+    const variants: ApiItemWithVariants["variants"] = Array.isArray(variantsRes.data)
+      ? variantsRes.data
+      : [];
 
     return {
       id: item._id,
@@ -99,7 +107,7 @@ export const fetchOutfitById = async (
       fabric: item.fabric ?? "",
       style: item.style ?? "",
       category: item.category,
-      variants: item.variants ?? [],
+      variants,
     };
   } catch (err) {
     console.error("fetchOutfitById error:", err);

@@ -131,18 +131,6 @@ export class ItemsController {
     );
   }
 
-  /**
-   * Get item by ID (Public access)
-   * GET /items/:id
-   */
-  @Public()
-  @Get(':id')
-  @ApiOperation({ summary: 'Get item by ID', description: 'Retrieve single item details' })
-  @ApiResponse({ status: 200, description: 'Item details' })
-  @ApiResponse({ status: 404, description: 'Item not found' })
-  async findOne(@Param('id') id: string) {
-    return this.itemsService.findOne(id);
-  }
 
   /**
    * Update item (Admin only)

@@ -1,17 +1,18 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { Item } from '../entities/item.entity';
+import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
 import { CreateItemDto, UpdateItemDto } from '../dto';
 import { PaginatedResult } from '../../common/interfaces';
-import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
 
 @Injectable()
 export class ItemsService {
   constructor(
     @InjectModel(Item.name) private itemModel: Model<Item>,
-    @InjectModel(ProductVariant.name) private variantModel: Model<ProductVariant>,
+    @InjectModel(ProductVariant.name) private productVariantModel: Model<ProductVariant>,
+   
   ) {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -58,17 +59,18 @@ export class ItemsService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<Item & { variants: ProductVariant[] }> {
-    const item = await this.itemModel.findById(id);
-    if (!item) throw new NotFoundException(`Item with ID ${id} not found`);
-
-    const variants = await this.variantModel
-      .find({ productId: new (require('mongoose').Types.ObjectId)(id) })
-      .sort({ createdAt: -1 })
+async findOne(id: string): Promise<any> {
+    const item = await this.itemModel.findById(id).exec();
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${id} not found`);
+    }
+    const variants = await this.productVariantModel
+      .find({ productId: new Types.ObjectId(id) })
+      .sort({ createdAt: 1 })
       .exec();
-
-    return { ...(item.toJSON() as any), variants } as Item & { variants: ProductVariant[] };
+    return { ...item.toObject(), variants };
   }
+
 
   async update(id: string, updateItemDto: UpdateItemDto): Promise<Item> {
     const item = await this.itemModel.findByIdAndUpdate(
