@@ -22,6 +22,7 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiQuery,
+  ApiBody,
 } from "@nestjs/swagger";
 import { ProductVariantsService } from "../services/product-variants.service";
 import { CreateProductVariantDto, UpdateProductVariantDto } from "../dto";
@@ -33,105 +34,147 @@ import { memoryStorage } from "multer";
 @Controller("product-variants")
 export class ProductVariantsController {
   constructor(private readonly variantsService: ProductVariantsService) {}
-
-  /**
-   * Create a new variant for a product (Admin only)
-   * POST /product-variants
-   */
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles("admin")
-  @Post()
-  @ApiOperation({
-    summary: "Create product variant",
-    description: "Create a new variant (sub-item) for an existing product",
-  })
-  @ApiConsumes("multipart/form-data")
-  @ApiBearerAuth()
-  @ApiResponse({ status: 201, description: "Variant created successfully" })
-  @ApiResponse({
-    status: 400,
-    description: "Bad Request — missing productId or invalid data",
-  })
-  @ApiResponse({ status: 401, description: "Unauthorized" })
-  @ApiResponse({
-    status: 403,
-    description: "Forbidden — Admin access required",
-  })
-  @UseInterceptors(
-    FileInterceptor("image", {
-      storage: memoryStorage(),
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpeg|png|gif|webp)$/)) {
-          callback(
-            new BadRequestException("Only image files are allowed"),
-            false,
-          );
-        } else {
-          callback(null, true);
-        }
+/**
+ * Create a new variant for a product (Admin only)
+ * POST /product-variants
+ */
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles("admin")
+@Post()
+@ApiOperation({
+  summary: "Create product variant",
+  description: "Create a new variant (sub-item) for an existing product",
+})
+@ApiConsumes("multipart/form-data")
+@ApiBody({
+  schema: {
+    type: "object",
+    properties: {
+      productId: {
+        type: "string",
+        example: "507f1f77bcf86cd799439011",
       },
-    }),
-  )
-  async create(
-    @Body() createVariantDto: CreateProductVariantDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    // If a file was uploaded, treat it as the variant image
-    if (file) {
-      const { v2: cloudinary } = await import("cloudinary");
-      cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
+      color: {
+        type: "string",
+        example: "Black",
+      },
+      size: {
+        type: "string",
+        example: "Medium",
+      },
+      stock: {
+        type: "number",
+        example: 25,
+      },
+      price: {
+        type: "number",
+        example: 29999,
+      },
+      sku: {
+        type: "string",
+        example: "DG-SHIRT-BLK-M",
+      },
+      image: {
+        type: "string",
+        format: "binary",
+      },
+    },
+    required: ["productId", "price"],
+  },
+})
+@ApiBearerAuth()
+@ApiResponse({ status: 201, description: "Variant created successfully" })
+@ApiResponse({
+  status: 400,
+  description: "Bad Request — missing productId or invalid data",
+})
+@ApiResponse({ status: 401, description: "Unauthorized" })
+@ApiResponse({
+  status: 403,
+  description: "Forbidden — Admin access required",
+})
+@UseInterceptors(
+  FileInterceptor("image", {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/^image\/(jpeg|png|gif|webp)$/)) {
+        callback(
+          new BadRequestException("Only image files are allowed"),
+          false,
+        );
+      } else {
+        callback(null, true);
+      }
+    },
+  }),
+)
+async create(
+  @Body() createVariantDto: CreateProductVariantDto,
+  @UploadedFile() file?: Express.Multer.File,
+) {
+  // If a file was uploaded, treat it as the variant image
+  if (file) {
+    const { v2: cloudinary } = await import("cloudinary");
+
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+
+    return new Promise<{ url: string; publicId: string }>(
+      (resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            {
+              folder: "luxe-style-studio/variants",
+              resource_type: "image",
+              transformation: [
+                { width: 800, height: 800, crop: "limit" },
+                { quality: "auto:good" },
+                { fetch_format: "auto" },
+              ],
+            },
+            (error: any, result: any) => {
+              if (error) {
+                reject(
+                  new BadRequestException(
+                    "Failed to upload variant image to Cloudinary",
+                  ),
+                );
+              } else if (result) {
+                resolve({
+                  url: result.secure_url,
+                  publicId: result.public_id,
+                });
+              } else {
+                reject(
+                  new BadRequestException(
+                    "No result from Cloudinary",
+                  ),
+                );
+              }
+            },
+          )
+          .end(file.buffer);
+      },
+    ).then((uploadResult) => {
+      return this.variantsService.create({
+        ...createVariantDto,
+        image: uploadResult.url,
       });
-
-      return new Promise<{ url: string; publicId: string }>(
-        (resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              {
-                folder: "luxe-style-studio/variants",
-                resource_type: "image",
-                transformation: [
-                  { width: 800, height: 800, crop: "limit" },
-                  { quality: "auto:good" },
-                  { fetch_format: "auto" },
-                ],
-              },
-              (error: any, result: any) => {
-                if (error) {
-                  reject(
-                    new BadRequestException(
-                      "Failed to upload variant image to Cloudinary",
-                    ),
-                  );
-                } else if (result) {
-                  resolve({
-                    url: result.secure_url,
-                    publicId: result.public_id,
-                  });
-                } else {
-                  reject(new BadRequestException("No result from Cloudinary"));
-                }
-              },
-            )
-            .end(file.buffer);
-        },
-      ).then((uploadResult) => {
-        return this.variantsService.create({
-          ...createVariantDto,
-          image: uploadResult.url,
-        });
-      });
-    }
-
-    if (!createVariantDto.image) {
-      throw new BadRequestException("Variant image is required");
-    }
-
-    return this.variantsService.create(createVariantDto);
+    });
   }
+
+  if (!createVariantDto.image) {
+    throw new BadRequestException(
+      "Variant image is required",
+    );
+  }
+
+  return this.variantsService.create(createVariantDto);
+}
 
   /**
    * Get all variants for a single product (Public)
@@ -146,6 +189,7 @@ export class ProductVariantsController {
   @ApiResponse({ status: 200, description: "List of variants for the product" })
   @ApiResponse({ status: 400, description: "Bad Request — missing productId" })
   @ApiResponse({ status: 404, description: "Product not found" })
+  @ApiBearerAuth()
   async findByProduct(@Param("productId") productId: string) {
     return this.variantsService.findByProductId(productId);
   }
