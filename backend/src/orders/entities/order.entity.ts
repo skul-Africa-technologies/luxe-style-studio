@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema({ timestamps: true })
 export class OrderItem {
   @Prop({ type: Types.ObjectId, ref: 'Item', required: true })
   itemId: Types.ObjectId;
@@ -14,8 +13,10 @@ export class OrderItem {
 
   @Prop({ required: true, min: 0 })
   price: number;
-}
 
+  @Prop() 
+  size?: string;
+}
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 
 @Schema({ timestamps: true })
