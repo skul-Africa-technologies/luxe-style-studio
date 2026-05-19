@@ -181,4 +181,17 @@ export class ItemsController {
   async getCategories() {
     return this.itemsService.getCategories();
   }
+
+  /**
+   * Get item by ID with variants (Public access)
+   * GET /items/:id
+   */
+  @Public()
+  @Get(':id')
+  @ApiOperation({ summary: 'Get item by ID', description: 'Retrieve a single item with its variants' })
+  @ApiResponse({ status: 200, description: 'Item found with variants' })
+  @ApiResponse({ status: 404, description: 'Item not found' })
+  async findOne(@Param('id') id: string) {
+    return this.itemsService.findOne(id);
+  }
 }
