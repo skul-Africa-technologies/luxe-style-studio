@@ -36,7 +36,6 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import {
   api,
   fetchProductWithVariants,
-  fetchVariantsForProduct,
   uploadVariantImage,
 } from "@/lib/api";
 
@@ -116,8 +115,9 @@ const AdminVariantManager = () => {
       try {
         const productData = await fetchProductWithVariants(id);
         setProduct(productData as unknown as Product);
-        const v = await fetchVariantsForProduct(id);
-        setVariants(v);
+        const res = await api.get(`/api/product-variants?productId=${id}`);
+        const variantList = Array.isArray(res.data) ? res.data : [];
+        setVariants(variantList);
       } catch {
         navigate("/admin/items");
       } finally {
@@ -227,10 +227,12 @@ const AdminVariantManager = () => {
         await api.post("/api/product-variants", payload);
       }
 
-      const v = await fetchVariantsForProduct(id);
-      setVariants(v);
+      const res = await api.get(`/api/product-variants?productId=${id}`);
+      const variantList = Array.isArray(res.data) ? res.data : [];
+      setVariants(variantList);
       setEditingId(null);
       resetForm();
+      alert(editingId ? "Variant updated successfully!" : "Variant added successfully!");
     } catch (err: unknown) {
       console.error("Variant error:", err);
       console.error("Response:", (err as any)?.response?.data);
@@ -245,10 +247,11 @@ const AdminVariantManager = () => {
   const handleDeleteConfirm = async () => {
     if (!variantToDelete || !token) return;
     try {
-      await api.delete(`/product-variants/${variantToDelete}`);
+      await api.delete(`/api/product-variants/${variantToDelete}`);
       if (id) {
-        const v = await fetchVariantsForProduct(id);
-        setVariants(v);
+        const res = await api.get(`/api/product-variants?productId=${id}`);
+        const variantList = Array.isArray(res.data) ? res.data : [];
+        setVariants(variantList);
       }
     } catch {
       alert("Failed to delete variant");
@@ -518,32 +521,31 @@ const AdminVariantManager = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            {isEditing ? (
-              <>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving…" : "Save Changes"}
-                </Button>
-                <Button type="button" variant="outline" onClick={cancelEdit}>
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button type="submit" disabled={isSubmitting}>
-                  <Plus size={16} className="mr-1" />
-                  {isSubmitting ? "Adding…" : "Add Variant"}
-                </Button>
-                <Button type="submit" disabled={isSubmitting || uploadingImage}>
-                  {uploadingImage
-                    ? "Uploading image…"
-                    : isSubmitting
-                      ? "Adding…"
-                      : "Add Variant"}
-                </Button>
-              </>
-            )}
-          </div>
+           <div className="flex flex-wrap gap-3 pt-2">
+             {isEditing ? (
+               <>
+                 <Button type="submit" disabled={isSubmitting}>
+                   {isSubmitting ? "Saving…" : "Save Changes"}
+                 </Button>
+                 <Button type="button" variant="outline" onClick={cancelEdit}>
+                   Cancel
+                 </Button>
+               </>
+             ) : (
+               <>
+                 <Button type="submit" disabled={isSubmitting || uploadingImage}>
+                   {uploadingImage
+                     ? "Uploading image…"
+                     : isSubmitting
+                       ? "Adding…"
+                       : "Add Variant"}
+                 </Button>
+                 <Button type="button" variant="outline" onClick={cancelEdit}>
+                   Cancel
+                 </Button>
+               </>
+             )}
+           </div>
         </form>
       </div>
 

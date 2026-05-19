@@ -111,10 +111,10 @@ export async function fetchProductWithVariants(
 export async function fetchVariantsForProduct(
   productId: string,
 ): Promise<ProductVariantApi[]> {
-  const res = await apiFetch<ProductVariantApi[]>(
+  const res = await api.get<ProductVariantApi[]>(
     `/api/product-variants/product/${productId}`,
   );
-  return Array.isArray(res) ? res : [];
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 /**

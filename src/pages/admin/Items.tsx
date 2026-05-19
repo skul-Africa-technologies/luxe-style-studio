@@ -233,62 +233,42 @@ const Items = () => {
                       <div className="font-medium font-body">
                         ₦{item.price.toLocaleString("en-NG")}
                       </div>
-                    </TableCell>
+</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                           {item.category ?? 'None'}
                         </div>
                       </TableCell>
-                     <TableCell className="text-right">
-                       <div className="flex items-center justify-end gap-2">
-                         <Button
-                           variant="ghost"
-                           size="icon"
-                           onClick={() => handleEdit(item._id)}
-                           className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
-                         >
-                           <Edit size={16} />
-                         </Button>
-                         <Button
-                           variant="ghost"
-                           size="icon"
-                           onClick={() => handleDeleteClick(item._id)}
-                           className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                         >
-                           <Trash2 size={16} />
-                         </Button>
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           className="gap-1.5 h-8 text-xs rounded-full"
-                           onClick={() => navigate(`/admin/manage-variants/${item._id}`)}
-                         >
-                           <Settings size={12} />
-                           Manage Variants
-                         </Button>
-                       </div>
-                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item._id)}
-                          className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
-                        >
-                          <Edit size={16} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(item._id)}
-                          className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(item._id)}
+                            className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                          >
+                            <Edit size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(item._id)}
+                            className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 h-8 text-xs rounded-full"
+                            onClick={() => navigate(`/admin/manage-variants/${item._id}`)}
+                          >
+                            <Settings size={12} />
+                            Manage Variants
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                 ))
               )}
             </TableBody>
