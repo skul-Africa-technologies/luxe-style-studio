@@ -21,6 +21,9 @@ category: string | null;
   @Prop({ default: true })
   isActive: boolean;
 
+    @Prop({ default: true })
+  size: string;
+
   @Prop({ type: Types.ObjectId, ref: 'User', nullable: true })
   createdBy?: Types.ObjectId;
 }

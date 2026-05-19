@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle, Loader2, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Loader2,
+  ShoppingBag,
+} from "lucide-react";
+
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { useCart } from "@/context/CartContext";
@@ -35,10 +41,12 @@ const Checkout = () => {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
 
+  // EMPTY CART STATE
   if (items.length === 0 && !isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -48,12 +56,10 @@ const Checkout = () => {
           className="text-center space-y-4"
         >
           <ShoppingBag size={48} className="mx-auto text-muted-foreground/30" />
-          <h2 className="font-display text-2xl text-foreground">
-            Your cart is empty
-          </h2>
+          <h2 className="font-display text-2xl">Your cart is empty</h2>
           <button
             onClick={() => navigate("/#collection")}
-            className="font-body text-sm tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to Collection
           </button>
@@ -62,402 +68,256 @@ const Checkout = () => {
     );
   }
 
-  const validateForm = (): boolean => {
+  // VALIDATION
+  const validateForm = () => {
     const newErrors: FormErrors = {};
-    let isValid = true;
+    let valid = true;
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
-      isValid = false;
+      valid = false;
     }
 
     if (!formData.email.trim() && !formData.phone.trim()) {
-      newErrors.email = "At least one contact method is required";
-      newErrors.phone = "At least one contact method is required";
-      isValid = false;
-    } else if (
-      formData.email.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
-      newErrors.email = "Please enter a valid email";
-      isValid = false;
+      newErrors.email = "Email or phone required";
+      newErrors.phone = "Email or phone required";
+      valid = false;
     }
 
     if (!formData.shippingAddress.trim()) {
-      newErrors.shippingAddress = "Shipping address is required";
-      isValid = false;
+      newErrors.shippingAddress = "Address is required";
+      valid = false;
     }
 
     setErrors(newErrors);
-    return isValid;
+    return valid;
   };
 
+  // INPUT CHANGE
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
+  // SUBMIT ORDER
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!validateForm()) return;
+
     setIsSubmitting(true);
+    setErrorMessage("");
 
     try {
       const orderPayload = {
+        userId: "guest",
         fullName: formData.name,
         email: formData.email,
         phone: formData.phone,
-        shippingAddress: formData.shippingAddress,
+        deliveryAddress: formData.shippingAddress,
         notes: formData.note,
+        currency: "NGN",
         items: items.map((item) => ({
           itemId: item.id,
           name: item.name,
           quantity: item.quantity,
           size: item.size ?? null,
-          price: parseFloat(item.price.replace(/[^0-9.-]+/g, "")),
+          price:
+            typeof item.price === "string"
+              ? parseFloat(item.price.replace(/[^0-9.-]+/g, ""))
+              : Number(item.price),
         })),
         total: subtotal,
       };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/orders`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orderPayload),
-        },
-      );
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/orders`;
 
-      const data = await response.json();
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
 
-      if (response.ok) {
-        setOrderId(data._id || data.orderId || "Order");
-        setIsOrderPlaced(true);
-        clearCart();
-      } else {
-        throw new Error(data.message || "Failed to place order");
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
       }
-    } catch (error) {
-      console.error("Checkout error:", error);
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Order failed");
+      }
+
+      setOrderId(data._id || data.orderId || "ORDER");
+      setIsOrderPlaced(true);
+      clearCart();
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      setErrorMessage(err.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // SUCCESS PAGE
   if (isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="pt-32 pb-24 px-6"
-        >
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", damping: 15, stiffness: 100 }}
-              className="w-20 h-20 mx-auto bg-foreground text-background rounded-full flex items-center justify-center"
-            >
-              <CheckCircle size={40} />
-            </motion.div>
-            <div className="space-y-2">
-              <h1 className="font-display text-3xl md:text-4xl text-foreground">
-                Order Placed Successfully!
-              </h1>
-              <p className="font-body text-muted-foreground text-lg">
-                Thank you for your order, {formData.name}
-              </p>
-            </div>
-            <div className="p-6 bg-secondary/20 border border-border space-y-3">
-              <p className="font-body text-sm text-muted-foreground">
-                Order ID:{" "}
-                <span className="font-medium text-foreground">{orderId}</span>
-              </p>
-              <p className="font-body text-sm text-muted-foreground">
-                A confirmation has been sent to your contact information.
-              </p>
-            </div>
-<div className="space-y-4 pt-4">
-              <p className="font-body text-base text-foreground">
-                MATTEEKAY will contact you shortly to confirm your order details
-                and arrange delivery.
-              </p>
-              <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate(`/orders/${orderId}`)}
-                  className="px-6 py-3 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase hover:opacity-90 transition-opacity"
-                >
-                  View Order Details
-                </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate("/#collection")}
-                  className="px-6 py-3 border font-body text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background transition-colors"
-                >
-                  Continue Shopping
-                </motion.button>
-              </div>
-            </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pt-32 text-center space-y-6"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="w-20 h-20 mx-auto bg-green-500 text-white rounded-full flex items-center justify-center"
+          >
+            <CheckCircle size={40} />
+          </motion.div>
+
+          <h1 className="text-3xl font-bold text-green-600">
+            Order Placed Successfully!
+          </h1>
+
+          <p className="text-muted-foreground">
+            Thank you, {formData.name}
+          </p>
+
+          <div className="p-4 border bg-green-50 text-green-700 inline-block">
+            Order ID: {orderId}
           </div>
-        </motion.main>
+
+          <div className="flex justify-center gap-3 pt-4">
+            <button
+              onClick={() => navigate(`/orders/${orderId}`)}
+              className="px-6 py-3 bg-black text-white"
+            >
+              View Order
+            </button>
+
+            <button
+              onClick={() => navigate("/#collection")}
+              className="px-6 py-3 border"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
+  // MAIN UI
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
       <MobileBottomNav />
-      <main className="pt-24 md:pt-28 max-w-6xl mx-auto px-6 md:px-12 pb-24">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 pb-8">
-          <motion.button
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 font-body text-sm tracking-wider text-muted-foreground hover:text-foreground transition-colors duration-300"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </motion.button>
-        </div>
 
-        <div className="max-w-6xl mx-auto px-6 md:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
-            {/* Checkout Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              <h1 className="font-display text-3xl md:text-4xl font-light text-foreground mb-8">
-                Checkout
-              </h1>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="name"
-                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
-                  >
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
-                  />
-                  {errors.name && (
-                    <p className="font-body text-xs text-destructive">
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
+      <main className="pt-24 max-w-6xl mx-auto px-6 md:px-12 pb-24">
+        {/* BACK BUTTON */}
+        <motion.button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 mb-8 text-sm text-muted-foreground"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </motion.button>
 
-                {/* Email */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="email"
-                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="your@email.com (optional)"
-                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
-                  />
-                  {errors.email && (
-                    <p className="font-body text-xs text-destructive">
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <input
+              name="name"
+              placeholder="Full Name"
+              onChange={handleInputChange}
+              className="w-full p-3 border"
+            />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
 
-                {/* Phone */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="phone"
-                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
-                  >
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+234 (optional)"
-                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50"
-                  />
-                  {errors.phone && (
-                    <p className="font-body text-xs text-destructive">
-                      {errors.phone}
-                    </p>
-                  )}
-                </div>
+            <input
+              name="email"
+              placeholder="Email"
+              onChange={handleInputChange}
+              className="w-full p-3 border"
+            />
 
-                {/* Shipping Address */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="shippingAddress"
-                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
-                  >
-                    Shipping Address *
-                  </label>
-                  <textarea
-                    id="shippingAddress"
-                    name="shippingAddress"
-                    value={formData.shippingAddress}
-                    onChange={handleInputChange}
-                    placeholder="Enter your shipping address"
-                    rows={3}
-                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50 resize-none"
-                  />
-                  {errors.shippingAddress && (
-                    <p className="font-body text-xs text-destructive">
-                      {errors.shippingAddress}
-                    </p>
-                  )}
-                </div>
+            <input
+              name="phone"
+              placeholder="Phone"
+              onChange={handleInputChange}
+              className="w-full p-3 border"
+            />
 
-                {/* Note */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="note"
-                    className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground"
-                  >
-                    Delivery Note (Optional)
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    value={formData.note}
-                    onChange={handleInputChange}
-                    placeholder="Any special instructions for your order..."
-                    rows={4}
-                    className="w-full px-4 py-3 bg-secondary/10 border border-border focus:border-foreground focus:outline-none transition-colors font-body text-sm text-foreground placeholder:text-muted-foreground/50 resize-none"
-                  />
-                </div>
+            <textarea
+              name="shippingAddress"
+              placeholder="Shipping Address"
+              onChange={handleInputChange}
+              className="w-full p-3 border"
+            />
 
-                {/* Submit */}
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  className="flex items-center justify-center gap-3 w-full py-4 bg-foreground text-background font-body text-xs tracking-[0.3em] uppercase hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    "Place Order"
-                  )}
-                </motion.button>
+            <textarea
+              name="note"
+              placeholder="Order Note (optional)"
+              onChange={handleInputChange}
+              className="w-full p-3 border"
+            />
 
-                <p className="font-body text-[11px] text-center text-muted-foreground tracking-wider">
-                  By placing your order, you agree to receive communication from
-                  MATTEEKAY
-                </p>
-              </form>
-            </motion.div>
-
-            {/* Order Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="lg:sticky lg:top-28"
-            >
-              <div className="bg-secondary/20 border border-border p-6 md:p-8">
-                <h2 className="font-display text-xl text-foreground mb-6">
-                  Order Summary
-                </h2>
-                <div className="space-y-4 mb-6">
-                  {items.map((item) => (
-                    <div key={`${item.id}__${item.size ?? "none"}`} className="flex gap-4">
-                      <div className="w-16 h-20 bg-secondary overflow-hidden flex-shrink-0">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-display text-sm text-foreground">
-                          {item.name}
-                        </h3>
-                        {item.size && (
-                          <p className="font-body text-xs text-muted-foreground">
-                            Size: {item.size}
-                          </p>
-                        )}
-                        <p className="font-body text-xs text-muted-foreground">
-                          Qty: {item.quantity}
-                        </p>
-                        <p className="font-body text-sm font-medium text-foreground mt-1">
-                          ₦{(
-                            parseFloat(item.price.replace(/[^0-9.-]+/g, "")) *
-                            item.quantity
-                          ).toLocaleString("en-NG")}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-border pt-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-sm tracking-wider text-muted-foreground">
-                      Subtotal
-                    </span>
-                    <span className="font-display text-lg text-foreground">
-                      ₦{subtotal.toLocaleString("en-NG")}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-sm tracking-wider text-muted-foreground">
-                      Total Items
-                    </span>
-                    <span className="font-body text-sm text-foreground">
-                      {itemCount}
-                    </span>
-                  </div>
-                  <div className="w-px h-8 bg-border mx-auto" />
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-lg text-foreground">
-                      Total
-                    </span>
-                    <span className="font-display text-xl font-medium text-foreground">
-                      ₦{subtotal.toLocaleString("en-NG")}
-                    </span>
-                  </div>
-                </div>
+            {/* ERROR MESSAGE */}
+            {errorMessage && (
+              <div className="p-3 bg-red-100 text-red-600 border border-red-300 text-sm">
+                {errorMessage}
               </div>
-            </motion.div>
+            )}
+
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 bg-black text-white flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  Processing...
+                </>
+              ) : (
+                "Place Order"
+              )}
+            </button>
+          </form>
+
+          {/* ORDER SUMMARY */}
+          <div className="border p-6 h-fit">
+            <h2 className="text-lg mb-4">Order Summary</h2>
+
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-between mb-3">
+                <span>{item.name}</span>
+                <span>× {item.quantity}</span>
+              </div>
+            ))}
+
+            <hr className="my-4" />
+
+            <div className="flex justify-between">
+              <span>Total Items</span>
+              <span>{itemCount}</span>
+            </div>
+
+            <div className="flex justify-between font-bold mt-2">
+              <span>Total</span>
+              <span>₦{subtotal.toLocaleString("en-NG")}</span>
+            </div>
           </div>
         </div>
       </main>
