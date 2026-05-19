@@ -184,19 +184,30 @@ const Checkout = () => {
                 A confirmation has been sent to your contact information.
               </p>
             </div>
-            <div className="space-y-4 pt-4">
+<div className="space-y-4 pt-4">
               <p className="font-body text-base text-foreground">
                 MATTEEKAY will contact you shortly to confirm your order details
                 and arrange delivery.
               </p>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/#collection")}
-                className="px-8 py-4 bg-foreground text-background font-body text-xs tracking-[0.25em] uppercase hover:opacity-90 transition-opacity"
-              >
-                Continue Shopping
-              </motion.button>
+              <div className="flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/orders/${orderId}`)}
+                  className="px-6 py-3 bg-foreground text-background font-body text-xs tracking-[0.2em] uppercase hover:opacity-90 transition-opacity"
+                >
+                  View Order Details
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate("/#collection")}
+                  className="px-6 py-3 border font-body text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background transition-colors"
+                >
+                  Continue Shopping
+                </motion.button>
+              </div>
             </div>
           </div>
         </motion.main>

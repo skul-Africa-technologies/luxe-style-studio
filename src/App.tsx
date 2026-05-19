@@ -9,6 +9,7 @@ import OutfitDetail from "./pages/OutfitDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import Wishlist from "./pages/Wishlist";
+import OrderDetails from "./pages/orders/OrderDetails";
 
 import Login from "./pages/admin/Login";
 import Dashboard from "./pages/admin/Dashboard";
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/outfit/:id" element={<OutfitDetail />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/orders/:orderId" element={<OrderDetails />} />
 
                 {/* ================= ADMIN ROUTES ================= */}
                 <Route

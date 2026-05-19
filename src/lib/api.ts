@@ -187,3 +187,41 @@ export async function uploadVariantImage(
   );
   return res.data;
 }
+
+/* ─── Order API ─────────────────────────────────────────────────────────── */
+
+export interface OrderItem {
+  itemId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  size?: string;
+}
+
+export interface OrderApi {
+  _id: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  items: {
+    itemId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    size?: string;
+  }[];
+  total: number;
+  status: string;
+  shippingAddress?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export async function fetchOrderById(orderId: string): Promise<OrderApi | null> {
+  try {
+    const res = await api.get<OrderApi>(`/api/orders/${orderId}`);
+    return res.data;
+  } catch {
+    return null;
+  }
+}

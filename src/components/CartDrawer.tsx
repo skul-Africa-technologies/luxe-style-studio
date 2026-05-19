@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
 import CartItem from "./CartItem";
 
+
 const CartDrawer = () => {
   const { state, closeCart, subtotal, itemCount } = useCart();
   const { isOpen, items } = state;
@@ -13,7 +14,7 @@ const CartDrawer = () => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop overlay */}
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -21,104 +22,94 @@ const CartDrawer = () => {
             onClick={closeCart}
             className="fixed inset-0 bg-foreground/30 backdrop-blur-sm z-50"
           />
-          
-          {/* Drawer panel */}
+
+          {/* Drawer */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 200,
+            }}
             className="fixed top-0 right-0 h-full w-full max-w-md bg-background z-50 shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-border">
               <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-foreground" />
-                <h2 className="font-display text-xl font-medium text-foreground">
+                <ShoppingBag size={20} />
+                <h2 className="text-xl font-medium">
                   Your Cart
                 </h2>
+
                 {itemCount > 0 && (
-                  <span className="font-body text-sm text-muted-foreground">
-                    ({itemCount} {itemCount === 1 ? "item" : "items"})
+                  <span className="text-sm text-muted-foreground">
+                    ({itemCount} items)
                   </span>
                 )}
               </div>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+
+              <button
                 onClick={closeCart}
-                className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Close cart"
+                className="w-10 h-10 flex items-center justify-center"
               >
                 <X size={20} />
-              </motion.button>
+              </button>
             </div>
-            
-            {/* Cart items */}
+
+            {/* Items */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                  <ShoppingBag size={48} className="text-muted-foreground/30" />
-                  <p className="font-body text-muted-foreground">
-                    Your cart is empty
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={closeCart}
-                    className="font-body text-sm tracking-wider text-foreground hover:text-muted-foreground transition-colors"
-                  >
-                    ← Continue Shopping
-                  </motion.button>
+                  <ShoppingBag
+                    size={48}
+                    className="text-muted-foreground/30"
+                  />
+                  <p>Your cart is empty</p>
+
+                  <button onClick={closeCart}>
+                    Continue Shopping
+                  </button>
                 </div>
               ) : (
-                items.map((item) => (
-                  <CartItem key={item.id} item={item} />
+                items.map((item, index) => (
+                  <CartItem
+                    key={
+                      item.variantId ||
+                      item.id ||
+                      index
+                    }
+                    item={item}
+                  />
                 ))
               )}
             </div>
-            
-            {/* Footer with totals and checkout */}
+
+            {/* Footer */}
             {items.length > 0 && (
-              <div className="border-t border-border px-6 py-6 space-y-6 bg-secondary/20">
-                {/* Totals */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-sm tracking-wider text-muted-foreground">
-                      Subtotal
-                    </span>
-                     <span className="font-display text-lg text-foreground">
-                       ₦{subtotal.toLocaleString()}
-                     </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-xs tracking-wider text-muted-foreground uppercase">
-                      Total Items
-                    </span>
-                    <span className="font-body text-sm text-foreground">
-                      {itemCount}
-                    </span>
-                  </div>
+              <div className="border-t px-6 py-6 space-y-6">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>
+                    ₦{subtotal.toLocaleString()}
+                  </span>
                 </div>
-                
-                {/* Checkout button */}
-                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                  <Link
-                    to="/checkout"
-                    onClick={closeCart}
-                    className="flex items-center justify-center gap-3 w-full py-4 bg-foreground text-background font-body text-xs tracking-[0.25em] uppercase hover:opacity-90 transition-opacity"
-                  >
-                    Proceed to Checkout
-                    <ArrowRight size={16} />
-                  </Link>
-                </motion.div>
-                
-                {/* Continue shopping */}
+
+                <Link
+                  to="/checkout"
+                  onClick={closeCart}
+                  className="flex items-center justify-center gap-3 w-full py-4 bg-black text-white"
+                >
+                  Proceed to Checkout
+                  <ArrowRight size={16} />
+                </Link>
+
                 <button
                   onClick={closeCart}
-                  className="w-full font-body text-sm text-center text-muted-foreground hover:text-foreground transition-colors tracking-wide"
+                  className="w-full text-sm text-muted-foreground"
                 >
-                  ← Continue Shopping
+                  Continue Shopping
                 </button>
               </div>
             )}

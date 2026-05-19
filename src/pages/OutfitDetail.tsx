@@ -14,27 +14,20 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
-import {
-  fetchOutfitById,
-  Outfit,
-} from "@/data/outfits";
+import { fetchOutfitById, Outfit } from "@/data/outfits";
 
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 /* Types */
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 
 interface Variant {
   id?: string;
   _id?: string;
-
   color?: string;
   size?: string;
-
   image?: string;
-
   stock?: number;
   price?: number;
-
   sku?: string;
 }
 
@@ -43,111 +36,71 @@ interface OutfitWithVariants extends Outfit {
   basePrice?: string;
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 /* Helpers */
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 
-const formatPriceFromNgn = (
-  price?: number,
-): string => {
+const formatPriceFromNgn = (price?: number): string => {
   if (!price) return "₦0";
-
   return `₦${price.toLocaleString("en-NG")}`;
 };
 
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 /* Component */
-/* ────────────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────── */
 
 const OutfitDetail = () => {
   const { id } = useParams<{ id: string }>();
-
   const navigate = useNavigate();
 
   const { addItem } = useCart();
+  const { isItemLoved, toggleItem } = useWishlist();
 
-  const { isItemLoved, toggleItem } =
-    useWishlist();
-
-  /* ── State ───────────────────────────────────────────────────────────── */
-
-  const [outfit, setOutfit] =
-    useState<OutfitWithVariants | null>(
-      null,
-    );
-
-  const [loading, setLoading] =
-    useState(true);
-
+  const [outfit, setOutfit] = useState<OutfitWithVariants | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [isAdded, setIsAdded] =
-    useState(false);
+  /* MAIN PRODUCT added state */
+  const [isAdded, setIsAdded] = useState(false);
 
-  /* ── Safe variants ───────────────────────────────────────────────────── */
+  /* VARIANT added state */
+  const [addedVariantId, setAddedVariantId] = useState<string | null>(null);
 
-  const variants = Array.isArray(
-    outfit?.variants,
-  )
+  const variants = Array.isArray(outfit?.variants)
     ? outfit.variants
     : [];
 
-  /* ── Static display values ───────────────────────────────────────────── */
+  const displayPrice = outfit?.price || outfit?.basePrice || "₦0";
+  const displayImage = outfit?.image || "/placeholder.png";
 
-  const displayPrice =
-    outfit?.price ||
-    outfit?.basePrice ||
-    "₦0";
+  const isLoved = outfit ? isItemLoved(outfit.id) : false;
 
-  const displayImage =
-    outfit?.image || "/placeholder.png";
-
-  const isLoved = outfit
-    ? isItemLoved(outfit.id)
-    : false;
-
-  /* ── Fetch ───────────────────────────────────────────────────────────── */
+  /* ── FETCH ───────────────────────────── */
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
 
-        const data =
-          await fetchOutfitById(id || "");
-
-        if (!data) {
-          throw new Error(
-            "Item not found",
-          );
-        }
+        const data = await fetchOutfitById(id || "");
+        if (!data) throw new Error("Item not found");
 
         setOutfit({
           ...data,
-          variants: Array.isArray(
-            data.variants,
-          )
-            ? data.variants
-            : [],
+          variants: Array.isArray(data.variants) ? data.variants : [],
           basePrice: data.price,
         });
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch outfit",
-        );
+        setError(err instanceof Error ? err.message : "Failed to fetch outfit");
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      load();
-    }
+    if (id) load();
   }, [id]);
 
-  /* ── Main Product Add To Cart ────────────────────────────────────────── */
+  /* ── MAIN ADD TO CART ──────────────── */
 
   const handleAddToCart = () => {
     if (!outfit) return;
@@ -163,359 +116,225 @@ const OutfitDetail = () => {
     });
 
     setIsAdded(true);
-
-    setTimeout(() => {
-      setIsAdded(false);
-    }, 2000);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
-  /* ───────────────────────────────────────────────────────────────────── */
+  const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(
+    `Hello MATTEEKAY I want to purchase: ${outfit?.name || ""}. Price: ${displayPrice}`
+  )}`;
 
-  const whatsappMessage =
-    encodeURIComponent(
-      `Hello MATTEEKAY I want to purchase this outfit: ${
-        outfit?.name || ""
-      }. Price: ${displayPrice}`,
-    );
+  /* ── LOADING / ERROR ─────────────── */
 
-  const whatsappUrl = `https://wa.me/1234567890?text=${whatsappMessage}`;
-
-  /* ── Loading ─────────────────────────────────────────────────────────── */
-
-  if (loading) {
+  if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading outfit...</p>
       </div>
     );
-  }
 
-  /* ── Error ───────────────────────────────────────────────────────────── */
-
-  if (error) {
+  if (error)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">
-          {error}
-        </p>
+        <p className="text-red-500">{error}</p>
       </div>
     );
-  }
 
-  /* ── Empty ───────────────────────────────────────────────────────────── */
-
-  if (!outfit) {
+  if (!outfit)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Outfit not found</p>
       </div>
     );
-  }
 
-  /* ── Render ──────────────────────────────────────────────────────────── */
+  /* ── RENDER ───────────────────────── */
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
-
       <MobileBottomNav />
 
       <main className="pt-24 max-w-7xl mx-auto px-4 md:px-12 pb-24">
-        {/* BACK BUTTON */}
 
+        {/* BACK */}
         <motion.button
-          initial={{
-            opacity: 0,
-            x: -10,
-          }}
-          animate={{
-            opacity: 1,
-            x: 0,
-          }}
-          onClick={() =>
-            navigate("/#collection")
-          }
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+          onClick={() => navigate("/#collection")}
+          className="flex items-center gap-2 mb-6 text-sm text-muted-foreground"
         >
           <ArrowLeft size={16} />
           Back to Collection
         </motion.button>
 
-        {/* MAIN PRODUCT */}
-
+        {/* MAIN */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
           {/* IMAGE */}
+          <div className="relative aspect-[3/4] bg-secondary rounded-2xl overflow-hidden">
+            <img src={displayImage} className="w-full h-full object-cover" />
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="overflow-hidden bg-secondary aspect-[3/4] relative rounded-2xl"
-          >
-            <img
-              src={displayImage}
-              alt={outfit.name}
-              className="w-full h-full object-cover"
-            />
-
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() =>
                 toggleItem({
                   id: outfit.id,
                   name: outfit.name,
                   price: outfit.price,
                   image: outfit.image,
-                  category:
-                    outfit.category,
+                  category: outfit.category,
                 })
               }
-              className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full"
+              className="absolute top-3 right-3 p-2 bg-white/80 rounded-full"
             >
               <Heart
                 size={18}
                 className={
-                  isLoved
-                    ? "fill-red-500 text-red-500"
-                    : "text-foreground"
+                  isLoved ? "text-red-500 fill-red-500" : ""
                 }
               />
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
 
           {/* INFO */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="space-y-6"
-          >
-            <p className="uppercase text-xs text-muted-foreground tracking-widest">
-              {outfit.category} —{" "}
-              {outfit.style || "N/A"}
+          <div className="space-y-6">
+            <p className="text-xs uppercase text-muted-foreground">
+              {outfit.category} — {outfit.style || "N/A"}
             </p>
 
-            <h1 className="text-4xl font-light">
-              {outfit.name}
-            </h1>
+            <h1 className="text-4xl font-light">{outfit.name}</h1>
 
-            <div>
-              <span className="text-2xl">
-                {displayPrice}
-              </span>
-            </div>
+            <span className="text-2xl">{displayPrice}</span>
 
-            <p className="text-muted-foreground">
-              {outfit.description}
-            </p>
+            <p className="text-muted-foreground">{outfit.description}</p>
 
-            {/* BUTTONS */}
+            {/* MAIN ADD BUTTON */}
+            <button
+              onClick={handleAddToCart}
+              className={`w-full py-4 flex items-center justify-center gap-2 uppercase text-xs tracking-widest ${
+                isAdded
+                  ? "bg-green-700 text-white"
+                  : "bg-black text-white"
+              }`}
+            >
+              {isAdded ? (
+                <>
+                  <Check size={16} />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={16} />
+                  Add to Cart
+                </>
+              )}
+            </button>
 
-            <div className="space-y-4">
-              <button
-                onClick={handleAddToCart}
-                className={`w-full py-4 uppercase text-xs tracking-widest flex items-center justify-center gap-2 ${
-                  isAdded
-                    ? "bg-green-700 text-white"
-                    : "bg-black text-white hover:bg-neutral-800"
-                }`}
-              >
-                {isAdded ? (
-                  <>
-                    <Check size={16} />
-                    Added
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag size={16} />
-                    Add to Cart
-                  </>
-                )}
-              </button>
-
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-4 border text-center uppercase text-xs tracking-widest block hover:bg-foreground hover:text-background"
-              >
-                Order via WhatsApp
-              </a>
-            </div>
-          </motion.div>
+            <a
+              href={whatsappUrl}
+              className="w-full py-4 border text-center uppercase text-xs block"
+            >
+              Order via WhatsApp
+            </a>
+          </div>
         </div>
 
-        {/* VARIANTS SECTION */}
-
+        {/* VARIANTS */}
         {variants.length > 0 && (
-          <div className="mt-20">
-            <div className="mb-8">
-              <h2 className="text-3xl font-light">
-                Available Variants
-              </h2>
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {variants.map((variant) => {
+              const id = variant._id || variant.id || "";
 
-              <p className="text-muted-foreground mt-2">
-                Select your preferred
-                variant and add directly
-                to cart.
-              </p>
-            </div>
+              const outOfStock = (variant.stock ?? 0) <= 0;
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {variants.map((variant) => {
-                const variantPrice =
-                  variant.price != null
-                    ? formatPriceFromNgn(
-                        variant.price,
-                      )
-                    : displayPrice;
+              return (
+                <motion.div key={id} className="border rounded-2xl overflow-hidden">
 
-                const outOfStock =
-                  (variant.stock ?? 0) <=
-                  0;
+                  <img
+                    src={variant.image || outfit.image}
+                    className="aspect-[3/4] object-cover w-full"
+                  />
 
-                return (
-                  <motion.div
-                    key={
-                      variant._id ||
-                      variant.id
-                    }
-                    whileHover={{
-                      y: -4,
-                    }}
-                    className="border rounded-2xl overflow-hidden bg-background"
-                  >
-                    {/* IMAGE */}
+                  <div className="p-4 space-y-3">
 
-                    <div className="aspect-[3/4] bg-secondary overflow-hidden">
-                      <img
-                        src={
-                          variant.image ||
-                          outfit.image
-                        }
-                        alt={
-                          variant.color ||
-                          outfit.name
-                        }
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    <h3 className="text-sm uppercase">
+                      {variant.color || "Variant"}
+                    </h3>
 
-                    {/* CONTENT */}
+                    <p className="text-sm text-muted-foreground">
+                      {formatPriceFromNgn(variant.price)}
+                    </p>
 
-                    <div className="p-4 space-y-4">
-                      <div>
-                        <h3 className="font-medium text-sm uppercase tracking-wide">
-                          {variant.color ||
-                            "Variant"}
-                        </h3>
+                    {variant.size && (
+                      <span className="text-xs border px-3 py-1 rounded-xl">
+                        {variant.size}
+                      </span>
+                    )}
+<button
+  disabled={outOfStock}
+  onClick={() => {
+    addItem({
+      id,
+      name: `${outfit.name} ${variant.color || ""} ${variant.size || ""}`,
+      price: formatPriceFromNgn(variant.price),
+      image: variant.image || outfit.image,
+      category: outfit.category,
+      style: outfit.style || "",
+      size: variant.size || "",
+    });
 
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {variantPrice}
-                        </p>
-                      </div>
+    setAddedVariantId(id);
 
-                      {/* SIZE */}
+    setTimeout(() => {
+      setAddedVariantId(null);<button
+  disabled={outOfStock}
+  onClick={() => {
+    addItem({
+      id,
+      name: `${outfit.name} ${variant.color || ""} ${variant.size || ""}`,
+      price: formatPriceFromNgn(variant.price),
+      image: variant.image || outfit.image,
+      category: outfit.category,
+      style: outfit.style || "",
+      size: variant.size || "",
+    });
 
-                      <div className="flex flex-wrap gap-2">
-                        {variant.size && (
-                          <span className="px-4 py-2 border rounded-xl text-sm font-medium">
-                            {
-                              variant.size
-                            }
-                          </span>
-                        )}
-                      </div>
+    setAddedVariantId(id);
 
-                      {/* STOCK */}
-
-                      <div>
-                        {outOfStock ? (
-                          <p className="text-xs text-red-500">
-                            Out of stock
-                          </p>
-                        ) : (
-                          <p className="text-xs text-green-600">
-                            {
-                              variant.stock
-                            }{" "}
-                            in stock
-                          </p>
-                        )}
-                      </div>
-
-                      {/* ADD BUTTON */}
-
-                      <button
-                        disabled={
-                          outOfStock
-                        }
-                        onClick={() => {
-                          addItem({
-                            id:
-                              variant._id ||
-                              variant.id ||
-                              outfit.id,
-
-                            name: `${outfit.name} ${
-                              variant.color
-                                ? `- ${variant.color}`
-                                : ""
-                            } ${
-                              variant.size
-                                ? `(${variant.size})`
-                                : ""
-                            }`,
-
-                            price:
-                              variantPrice,
-
-                            image:
-                              variant.image ||
-                              outfit.image,
-
-                            category:
-                              outfit.category,
-
-                            style:
-                              outfit.style ||
-                              "",
-
-                            size:
-                              variant.size ||
-                              "",
-                          });
-                        }}
-                        className={`w-full py-3 flex items-center justify-center gap-2 rounded-xl text-xs uppercase tracking-widest transition-all ${
-                          outOfStock
-                            ? "bg-neutral-400 text-white"
-                            : "bg-black text-white hover:bg-neutral-800"
-                        }`}
-                      >
-                        <ShoppingBag
-                          size={16}
-                        />
-
-                        {outOfStock
-                          ? "Out of Stock"
-                          : "Add to Cart"}
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+    setTimeout(() => {
+      setAddedVariantId(null);
+    }, 1500);
+  }}
+  className={`w-full h-12 flex items-center justify-center rounded-xl transition-all ${
+    outOfStock
+      ? "bg-gray-400 text-white"
+      : addedVariantId === id
+      ? "bg-green-700 text-white"
+      : "bg-black text-white hover:bg-neutral-800"
+  }`}
+>
+  {addedVariantId === id ? (
+    <Check size={22} />
+  ) : (
+    <ShoppingBag size={22} />
+  )}
+</button>
+    }, 1500);
+  }}
+  className={`w-full h-12 flex items-center justify-center rounded-xl transition-all ${
+    outOfStock
+      ? "bg-gray-400 text-white"
+      : addedVariantId === id
+      ? "bg-green-700 text-white"
+      : "bg-black text-white hover:bg-neutral-800"
+  }`}
+>
+  {addedVariantId === id ? (
+    <Check size={22} />
+  ) : (
+    <ShoppingBag size={22} />
+  )}
+</button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </main>
