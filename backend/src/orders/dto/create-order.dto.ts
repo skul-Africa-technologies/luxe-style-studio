@@ -28,6 +28,11 @@ export class OrderItemDto {
   @IsNumber()
   @Min(0)
   price: number;
+
+  @ApiPropertyOptional({ description: "Size e.g. S, M, L, XL, XXL" })
+  @IsOptional()
+  @IsString()
+  size?: string;
 }
 
 export class CreateOrderDto {
@@ -96,11 +101,6 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   notes?: string;
-
-  @ApiPropertyOptional({ description: "Size e.g. S, M, L, XL, XXL" }) // ADD
-  @IsOptional() // ADD
-  @IsString() // ADD
-  size?: string; // ADD
 }
 
 export class UpdateOrderStatusDto {
