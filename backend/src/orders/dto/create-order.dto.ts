@@ -19,6 +19,31 @@ export class OrderItemDto {
   @IsString()
   name: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @ApiPropertyOptional({ description: "Size e.g. S, M, L, XL, XXL" })
+  @IsOptional()
+  @IsString()
+  size?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  color?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  slug?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  category?: string;
+
   @ApiProperty({ minimum: 1 })
   @IsNumber()
   @Min(1)
@@ -28,11 +53,6 @@ export class OrderItemDto {
   @IsNumber()
   @Min(0)
   price: number;
-
-  @ApiPropertyOptional({ description: "Size e.g. S, M, L, XL, XXL" })
-  @IsOptional()
-  @IsString()
-  size?: string;
 }
 
 export class CreateOrderDto {

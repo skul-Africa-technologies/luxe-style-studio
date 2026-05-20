@@ -2,26 +2,34 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 /* ---------------- ORDER ITEM ---------------- */
-@Schema()
+@Schema({ _id: false })
 export class OrderItem {
   @Prop({ type: Types.ObjectId, ref: 'Item', required: false })
   itemId?: Types.ObjectId;
 
   @Prop({ required: true })
-  name!: string;
+  name: string;
 
-  @Prop({ required: true, min: 1 })
-  quantity?: number;
-
-  @Prop({ required: true, min: 0 })
-  price?: number;
+  @Prop()
+  image?: string;
 
   @Prop()
   size?: string;
 
-  // ✅ ADD THIS (VERY IMPORTANT for frontend images)
   @Prop()
-  image?: string;
+  color?: string;
+
+  @Prop()
+  slug?: string;
+
+  @Prop()
+  category?: string;
+
+  @Prop({ required: true, min: 1 })
+  quantity: number;
+
+  @Prop({ required: true, min: 0 })
+  price: number;
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
@@ -76,6 +84,22 @@ export class Order extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'Payment', required: false })
   paymentId?: Types.ObjectId;
+
+  // New fields
+  @Prop({ default: false })
+  isPaid: boolean;
+
+  @Prop()
+  paidAt?: Date;
+
+  @Prop()
+  customerNote?: string;
+
+  @Prop()
+  adminNote?: string;
+
+  @Prop()
+  trackingNumber?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
