@@ -127,7 +127,7 @@ const Orders = () => {
         `${import.meta.env.VITE_API_BASE_URL}/api/orders`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       const data = await res.json();
@@ -138,8 +138,7 @@ const Orders = () => {
         items: o.items || [],
         total: o.total || 0,
         status: o.status,
-        statusDisplay:
-          o.status.charAt(0).toUpperCase() + o.status.slice(1),
+        statusDisplay: o.status.charAt(0).toUpperCase() + o.status.slice(1),
         fullName: o.userId?.name || o.fullName || "Unknown",
         email: o.userId?.email || o.email || "N/A",
         phone: o.userId?.phone || o.phone || "N/A",
@@ -171,8 +170,8 @@ const Orders = () => {
           o._id.toLowerCase().includes(term) ||
           o.fullName.toLowerCase().includes(term) ||
           o.email.toLowerCase().includes(term) ||
-          o.shippingAddress.toLowerCase().includes(term)
-      )
+          o.shippingAddress.toLowerCase().includes(term),
+      ),
     );
   }, [search, orders]);
 
@@ -198,7 +197,7 @@ const Orders = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ status: next }),
-        }
+        },
       );
 
       await fetchOrders();
@@ -217,13 +216,10 @@ const Orders = () => {
     setActionLoading(id);
 
     try {
-      await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       await fetchOrders();
     } catch (err) {
@@ -296,9 +292,7 @@ const Orders = () => {
                   <TableBody>
                     {filteredOrders.map((order) => (
                       <TableRow key={order._id}>
-                        <TableCell>
-                          {order._id.slice(-8)}
-                        </TableCell>
+                        <TableCell>{order._id.slice(-8)}</TableCell>
 
                         <TableCell>
                           <div>
@@ -314,7 +308,7 @@ const Orders = () => {
                         <TableCell>
                           <span
                             className={`px-2 py-1 text-xs rounded ${getStatusColor(
-                              order.status
+                              order.status,
                             )}`}
                           >
                             {order.statusDisplay}
@@ -323,8 +317,8 @@ const Orders = () => {
 
                         <TableCell>{order.items.length}</TableCell>
 
-                        <TableCell>
-                          ₦{order.total.toFixed(2)}
+                        <TableCell className="font-medium">
+                          ₦{Number(order.total || 0).toLocaleString("en-NG")}
                         </TableCell>
 
                         {/* ACTIONS */}
@@ -338,9 +332,7 @@ const Orders = () => {
 
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() =>
-                                  handleViewDetails(order)
-                                }
+                                onClick={() => handleViewDetails(order)}
                               >
                                 View Full Page
                               </DropdownMenuItem>
@@ -348,22 +340,16 @@ const Orders = () => {
                               {getNextStatus(order.status) && (
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleUpdateStatus(
-                                      order._id,
-                                      order.status
-                                    )
+                                    handleUpdateStatus(order._id, order.status)
                                   }
                                 >
-                                  Mark as{" "}
-                                  {getNextStatus(order.status)}
+                                  Mark as {getNextStatus(order.status)}
                                 </DropdownMenuItem>
                               )}
 
                               <DropdownMenuItem
                                 className="text-red-500"
-                                onClick={() =>
-                                  handleCancel(order._id)
-                                }
+                                onClick={() => handleCancel(order._id)}
                               >
                                 Cancel Order
                               </DropdownMenuItem>

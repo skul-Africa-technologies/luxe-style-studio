@@ -282,16 +282,7 @@ const OrderDetails = () => {
           )}
         </div>
 
-        {/* DEBUG */}
-        <div className="border rounded-xl p-4 bg-gray-50">
-          <p className="font-semibold mb-3 text-sm">
-            Debug Order Data
-          </p>
-
-          <pre className="text-xs overflow-auto">
-            {JSON.stringify(order, null, 2)}
-          </pre>
-        </div>
+    
       </div>
     </AdminLayout>
   );

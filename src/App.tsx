@@ -39,7 +39,7 @@ const App = () => (
           <WishlistProvider>
             <Toaster />
             <Sonner />
-             <Analytics/>
+            <Analytics />
             <BrowserRouter>
               <Routes>
                 {/* ================= USER ROUTES ================= */}
@@ -148,7 +148,14 @@ const App = () => (
 
                 {/* ================= FALLBACK ================= */}
                 <Route path="*" element={<NotFound />} />
-                <Route path="/admin/orders/:id" element={<OrderDetails />} />
+                <Route
+                  path="/admin/orders/:id"
+                  element={
+                    <AdminThemeProvider>
+                      <OrderDetails />
+                    </AdminThemeProvider>
+                  }
+                />
               </Routes>
             </BrowserRouter>
           </WishlistProvider>
