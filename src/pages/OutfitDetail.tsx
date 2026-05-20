@@ -54,7 +54,7 @@ const MainOutfitActions = ({
   const [isAdded, setIsAdded] = useState(false);
   const [sizeError, setSizeError] = useState(false);
 
-  const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+  const SIZES = [ "S", "L", "XL", "XXL"];
 
   const handleAdd = () => {
     if (!selectedSize) {

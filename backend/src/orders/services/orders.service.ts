@@ -38,6 +38,7 @@ export class OrdersService {
 
     // Build safe product snapshot for each item
     const processedItems = await Promise.all(
+      
       createOrderDto.items.map(async (item) => {
         let product = null;
 
@@ -52,10 +53,7 @@ export class OrdersService {
 
           name: product?.name || item.name || 'Unknown Product',
 
-          image:
-            product?.imageUrl ||
-            product?.images?.[0] ||
-            null,
+         image: product?.imageUrl || null,
 
           price: product?.price || item.price || 0,
 
