@@ -18,7 +18,7 @@ import Users from "./pages/admin/Users";
 import Settings from "./pages/admin/Settings";
 import Items from "./pages/admin/Items";
 import AddSlideshow from "./pages/admin/AddSlideshow";
-
+import { Analytics } from "@vercel/analytics/next"
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { SessionProvider } from "@/context/SessionContext";
@@ -39,7 +39,7 @@ const App = () => (
           <WishlistProvider>
             <Toaster />
             <Sonner />
-
+             <Analytics/>
             <BrowserRouter>
               <Routes>
                 {/* ================= USER ROUTES ================= */}
