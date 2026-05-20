@@ -112,12 +112,12 @@ const SlideshowSection = () => {
   const currentSlide = slideshows[currentIndex];
 
   return (
-    <section
-      id="slideshow"
-      className="py-16 md:py-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
+<section
+  id="slideshow"
+  className="pt-28 md:pt-56 pb-16 md:pb-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
+  onMouseEnter={() => setIsPaused(true)}
+  onMouseLeave={() => setIsPaused(false)}
+>
       <div className="relative">
         <div
           className="relative h-[400px] sm:h-[450px] md:h-[500px] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl"

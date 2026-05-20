@@ -26,13 +26,13 @@ const Navbar = () => {
           {/* Brand */}
           <a
             href="#home"
-            className="flex items-center gap-3 font-brand text-2xl md:text-3xl font-bold tracking-[0.2em] text-foreground uppercase"
+      className="flex items-center gap-3 font-brand text-2xl md:text-4xl font-bold tracking-[0.2em] text-foreground uppercase"
             style={{ fontFamily: "Cormorant Garamond, serif" }}
           >
             <img
               src="/logo.PNG"
               alt="MATTEEKAY logo"
-              className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover"
+              className="w-10 h-10 md:w-20 md:h-20 rounded-full object-cover"
             />
             MATTEEKAY
           </a>
