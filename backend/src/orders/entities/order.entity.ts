@@ -1,27 +1,35 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+/* ---------------- ORDER ITEM ---------------- */
+@Schema()
 export class OrderItem {
-  @Prop({ type: Types.ObjectId, ref: 'Item', required: true })
-  itemId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Item', required: false })
+  itemId?: Types.ObjectId;
 
   @Prop({ required: true })
-  name: string;
+  name!: string;
 
   @Prop({ required: true, min: 1 })
-  quantity: number;
+  quantity?: number;
 
   @Prop({ required: true, min: 0 })
-  price: number;
+  price?: number;
 
-  @Prop() 
+  @Prop()
   size?: string;
+
+  // ✅ ADD THIS (VERY IMPORTANT for frontend images)
+  @Prop()
+  image?: string;
 }
+
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 
+/* ---------------- ORDER ---------------- */
 @Schema({ timestamps: true })
 export class Order extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'User', nullable: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   userId?: Types.ObjectId;
 
   @Prop()
@@ -34,16 +42,19 @@ export class Order extends Document {
   phone?: string;
 
   @Prop({ type: [OrderItemSchema], required: true })
-  items: OrderItem[];
+  items?: OrderItem[];
 
-   @Prop({ required: true, min: 0 })
-   total: number;
+  @Prop({ required: true, min: 0 })
+  total?: number;
 
-   @Prop({ default: 'NGN' })
-   currency: string;
+  @Prop({ default: 'NGN' })
+  currency?: string;
 
-   @Prop({ default: 'pending', enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'] })
-   status: string;
+  @Prop({
+    default: 'pending',
+    enum: ['pending', 'paid', 'shipped', 'delivered', 'cancelled'],
+  })
+  status?: string;
 
   @Prop()
   shippingAddress?: string;
@@ -63,11 +74,7 @@ export class Order extends Document {
   @Prop()
   notes?: string;
 
-  
-  @Prop()
-  size?: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'Payment', nullable: true })
+  @Prop({ type: Types.ObjectId, ref: 'Payment', required: false })
   paymentId?: Types.ObjectId;
 }
 

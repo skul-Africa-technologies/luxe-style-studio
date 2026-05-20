@@ -9,7 +9,6 @@ import OutfitDetail from "./pages/OutfitDetail";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import Wishlist from "./pages/Wishlist";
-import OrderDetails from "./pages/orders/OrderDetails";
 
 import Login from "./pages/admin/Login";
 import Dashboard from "./pages/admin/Dashboard";
@@ -28,6 +27,7 @@ import { AdminThemeProvider } from "./context/AdminThemeContext";
 import EditItem from "./pages/editItem";
 import SlideshowManagement from "./pages/admin/Slideshow";
 import AdminVariantManager from "./pages/admin/AdminVariantManager";
+import OrderDetails from "./pages/admin/OrderDetails";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +47,6 @@ const App = () => (
                 <Route path="/outfit/:id" element={<OutfitDetail />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/orders/:orderId" element={<OrderDetails />} />
 
                 {/* ================= ADMIN ROUTES ================= */}
                 <Route
@@ -138,7 +137,7 @@ const App = () => (
                   }
                 />
 
-                     <Route
+                <Route
                   path="/admin/slideshow"
                   element={
                     <AdminThemeProvider>
@@ -149,6 +148,7 @@ const App = () => (
 
                 {/* ================= FALLBACK ================= */}
                 <Route path="*" element={<NotFound />} />
+                <Route path="/admin/orders/:id" element={<OrderDetails />} />
               </Routes>
             </BrowserRouter>
           </WishlistProvider>

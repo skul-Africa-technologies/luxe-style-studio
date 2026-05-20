@@ -197,21 +197,14 @@ const Checkout = () => {
             Order ID: {orderId}
           </div>
 
-          <div className="flex justify-center gap-3 pt-4">
-            <button
-              onClick={() => navigate(`/orders/${orderId}`)}
-              className="px-6 py-3 bg-black text-white"
-            >
-              View Order
-            </button>
-
-            <button
-              onClick={() => navigate("/#collection")}
-              className="px-6 py-3 border"
-            >
-              Continue Shopping
-            </button>
-          </div>
+<div className="flex justify-center gap-3 pt-4">
+             <button
+               onClick={() => navigate("/#collection")}
+               className="px-6 py-3 bg-black text-white"
+             >
+               Continue Shopping
+             </button>
+           </div>
         </motion.div>
       </div>
     );

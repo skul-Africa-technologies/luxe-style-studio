@@ -33,9 +33,11 @@ export class OrdersController {
     return this.ordersService.findAll(1, 10, status);
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get(':id')
-  @ApiOperation({ summary: 'Get order by ID', description: 'Retrieve single order details (Public access)' })
+  @ApiOperation({ summary: 'Get order by ID', description: 'Retrieve single order details (Admin only)' })
+  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Order details' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async findOne(@Param('id') id: string) {

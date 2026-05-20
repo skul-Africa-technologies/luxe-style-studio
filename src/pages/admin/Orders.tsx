@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Filter, MoreHorizontal, Calendar, MapPin, Package, User, Mail, Phone } from "lucide-react";
+import { Search, Filter, MoreHorizontal } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,37 +21,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Route protection
+/* ---------------- ROUTE PROTECTION ---------------- */
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+
   useEffect(() => {
     const token = localStorage.getItem("admin-token");
     if (!token) navigate("/admin/login", { replace: true });
   }, [navigate]);
+
   return <>{children}</>;
 };
 
-// User type from populated userId
+/* ---------------- TYPES ---------------- */
 interface User {
   _id: string;
   name: string;
   email: string;
   phone?: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  postalCode?: string;
 }
 
-// Order item type from backend
 interface OrderItem {
+  itemId: string;
   name: string;
   quantity: number;
   price: number;
+  size?: string;
 }
 
-
-// Full order type from backend
 interface Order {
   _id: string;
   userId?: User;
@@ -63,15 +59,9 @@ interface Order {
   email?: string;
   phone?: string;
   shippingAddress: string;
-  deliveryAddress?: string;
-  deliveryLat?: number;
-  deliveryLng?: number;
-  googleMapsLink?: string;
-  notes: string;
   createdAt: string;
 }
 
-// Display order type (with computed fields)
 interface DisplayOrder {
   _id: string;
   userId?: User;
@@ -83,16 +73,11 @@ interface DisplayOrder {
   email: string;
   phone: string;
   shippingAddress: string;
-  deliveryAddress?: string;
-  deliveryLat?: number;
-  deliveryLng?: number;
-  googleMapsLink?: string;
-  notes: string;
   createdAt: string;
   date: string;
 }
 
-// Status color mapping
+/* ---------------- HELPERS ---------------- */
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "completed":
@@ -111,64 +96,61 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// Get next status in workflow
-const getNextStatus = (currentStatus: string): string | null => {
-  const statusFlow: Record<string, string> = {
+const getNextStatus = (status: string): string | null => {
+  const flow: Record<string, string> = {
     pending: "paid",
     paid: "shipped",
     shipped: "delivered",
   };
-  return statusFlow[currentStatus.toLowerCase()] || null;
+  return flow[status.toLowerCase()] || null;
 };
 
+/* ---------------- PAGE ---------------- */
 const Orders = () => {
   const navigate = useNavigate();
+
   const [orders, setOrders] = useState<DisplayOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [filteredOrders, setFilteredOrders] = useState<DisplayOrder[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<DisplayOrder | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const token = localStorage.getItem("admin-token");
 
-  // Fetch orders from API
+  /* ---------------- FETCH ORDERS ---------------- */
   const fetchOrders = async () => {
     if (!token) return;
+
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/orders`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       const data = await res.json();
 
-      const mappedOrders: DisplayOrder[] = (data.data || []).map((o: Order) => ({
+      const mapped: DisplayOrder[] = (data.data || []).map((o: Order) => ({
         _id: o._id,
         userId: o.userId,
         items: o.items || [],
         total: o.total || 0,
         status: o.status,
-        statusDisplay: o.status.charAt(0).toUpperCase() + o.status.slice(1),
+        statusDisplay:
+          o.status.charAt(0).toUpperCase() + o.status.slice(1),
         fullName: o.userId?.name || o.fullName || "Unknown",
         email: o.userId?.email || o.email || "N/A",
         phone: o.userId?.phone || o.phone || "N/A",
         shippingAddress: o.shippingAddress || "N/A",
-        deliveryAddress: o.deliveryAddress,
-        deliveryLat: o.deliveryLat,
-        deliveryLng: o.deliveryLng,
-        googleMapsLink: o.googleMapsLink,
-        notes: o.notes || "",
         createdAt: o.createdAt,
-        date: new Date(o.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+        date: new Date(o.createdAt).toLocaleDateString(),
       }));
 
-      setOrders(mappedOrders);
+      setOrders(mapped);
     } catch (err) {
-      console.error("Failed to fetch orders:", err);
+      console.error(err);
       setOrders([]);
     } finally {
       setLoading(false);
@@ -179,219 +161,212 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  // Filter orders based on search term
+  /* ---------------- SEARCH ---------------- */
   useEffect(() => {
-    const term = searchTerm.trim().toLowerCase();
-    const filtered = orders.filter(
-      (order) =>
-        order._id.toLowerCase().includes(term) ||
-        order.fullName.toLowerCase().includes(term) ||
-        order.email.toLowerCase().includes(term) ||
-        order.shippingAddress.toLowerCase().includes(term)
+    const term = search.toLowerCase();
+
+    setFilteredOrders(
+      orders.filter(
+        (o) =>
+          o._id.toLowerCase().includes(term) ||
+          o.fullName.toLowerCase().includes(term) ||
+          o.email.toLowerCase().includes(term) ||
+          o.shippingAddress.toLowerCase().includes(term)
+      )
     );
-    setFilteredOrders(filtered);
-  }, [orders, searchTerm]);
+  }, [search, orders]);
 
-  // View order details
+  /* ---------------- NAVIGATE TO DETAILS PAGE ---------------- */
   const handleViewDetails = (order: DisplayOrder) => {
-    setSelectedOrder(order);
-    setDialogOpen(true);
+    navigate(`/admin/orders/${order._id}`);
   };
 
-  // Cancel order
-  const handleCancelOrder = async (id: string) => {
-    if (!token) return;
+  /* ---------------- UPDATE STATUS ---------------- */
+  const handleUpdateStatus = async (id: string, status: string) => {
+    const next = getNextStatus(status);
+    if (!next || !token) return;
+
     setActionLoading(id);
+
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to cancel order");
+      await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: next }),
+        }
+      );
+
       await fetchOrders();
-      setDialogOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Could not cancel order");
+      alert("Failed to update status");
     } finally {
       setActionLoading(null);
     }
   };
 
-  // Update order status
-  const handleUpdateStatus = async (id: string, currentStatus: string) => {
+  /* ---------------- CANCEL ORDER ---------------- */
+  const handleCancel = async (id: string) => {
     if (!token) return;
-    const nextStatus = getNextStatus(currentStatus);
-    if (!nextStatus) return;
-    
+
     setActionLoading(id);
+
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      if (!res.ok) throw new Error("Failed to update status");
+      await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/orders/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       await fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("Could not update order status");
+      alert("Failed to cancel order");
     } finally {
       setActionLoading(null);
     }
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <ProtectedRoute>
       <AdminLayout>
         <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* HEADER */}
+          <div className="flex justify-between items-center">
             <motion.h2
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-brand text-2xl text-foreground"
+              className="text-2xl font-bold"
             >
-              Orders Management
+              Orders
             </motion.h2>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-body text-xs uppercase tracking-[0.1em]"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-              <Button size="sm" className="font-body text-xs uppercase tracking-[0.1em]">
-                Export
-              </Button>
-            </div>
+
+            <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
           </div>
 
-          {/* Search */}
-          <Card className="bg-card border-border">
+          {/* SEARCH */}
+          <Card>
             <CardContent className="pt-6">
               <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search by Order ID, Customer Name, or Address..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 font-body text-sm"
+                  className="pl-10"
+                  placeholder="Search orders..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Orders Table */}
-          <Card className="bg-card border-border">
+          {/* TABLE */}
+          <Card>
             <CardHeader>
-              <CardTitle className="font-brand text-lg">All Orders</CardTitle>
+              <CardTitle>All Orders</CardTitle>
             </CardHeader>
+
             <CardContent>
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                  <p className="text-sm text-muted-foreground font-body">Loading orders...</p>
-                </div>
-              ) : filteredOrders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                    <Package className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-muted-foreground font-body text-sm">
-                    {searchTerm ? "No orders match your search" : "No orders found"}
-                  </p>
-                  {searchTerm && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSearchTerm("")}
-                      className="font-body text-xs"
-                    >
-                      Clear Search
-                    </Button>
-                  )}
-                </div>
+                <p>Loading...</p>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-border">
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Order ID</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Customer</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Date</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Status</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Items</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground">Total</TableHead>
-                      <TableHead className="font-body text-xs uppercase tracking-[0.1em] text-muted-foreground w-20">Actions</TableHead>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead />
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {filteredOrders.map((order) => (
-                      <TableRow key={order._id} className="border-border hover:bg-muted/50 transition-colors">
-                        <TableCell className="font-body text-sm text-foreground font-mono">
-                          {order._id.slice(-8).toUpperCase()}
+                      <TableRow key={order._id}>
+                        <TableCell>
+                          {order._id.slice(-8)}
                         </TableCell>
-                        <TableCell className="font-body text-sm text-foreground">
-                          <div className="space-y-0.5">
-                            <p className="font-medium">{order.fullName}</p>
-                            <p className="text-xs text-muted-foreground">{order.email}</p>
+
+                        <TableCell>
+                          <div>
+                            <p>{order.fullName}</p>
+                            <p className="text-xs text-gray-500">
+                              {order.email}
+                            </p>
                           </div>
                         </TableCell>
-                        <TableCell className="font-body text-sm text-foreground">
-                          {order.date}
-                        </TableCell>
+
+                        <TableCell>{order.date}</TableCell>
+
                         <TableCell>
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                              order.statusDisplay
+                            className={`px-2 py-1 text-xs rounded ${getStatusColor(
+                              order.status
                             )}`}
                           >
                             {order.statusDisplay}
                           </span>
                         </TableCell>
-                        <TableCell className="font-body text-sm text-foreground">
-                          {order.items.length} item{order.items.length !== 1 ? "s" : ""}
-                        </TableCell>
-                        <TableCell className="font-body text-sm text-foreground font-medium">
+
+                        <TableCell>{order.items.length}</TableCell>
+
+                        <TableCell>
                           ₦{order.total.toFixed(2)}
                         </TableCell>
+
+                        {/* ACTIONS */}
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                disabled={actionLoading !== null}
-                              >
-                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewDetails(order)}>
-                                View Details
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleViewDetails(order)
+                                }
+                              >
+                                View Full Page
                               </DropdownMenuItem>
+
                               {getNextStatus(order.status) && (
                                 <DropdownMenuItem
-                                  onClick={() => handleUpdateStatus(order._id, order.status)}
-                                  disabled={actionLoading === order._id}
+                                  onClick={() =>
+                                    handleUpdateStatus(
+                                      order._id,
+                                      order.status
+                                    )
+                                  }
                                 >
-                                  {actionLoading === order._id ? "Updating..." : `Mark as ${getNextStatus(order.status)}`}
+                                  Mark as{" "}
+                                  {getNextStatus(order.status)}
                                 </DropdownMenuItem>
                               )}
-                              {order.status.toLowerCase() !== "cancelled" && order.status.toLowerCase() !== "completed" && order.status.toLowerCase() !== "delivered" && (
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={() => handleCancelOrder(order._id)}
-                                  disabled={actionLoading === order._id}
-                                >
-                                  {actionLoading === order._id ? "Cancelling..." : "Cancel Order"}
-                                </DropdownMenuItem>
-                              )}
+
+                              <DropdownMenuItem
+                                className="text-red-500"
+                                onClick={() =>
+                                  handleCancel(order._id)
+                                }
+                              >
+                                Cancel Order
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -402,156 +377,7 @@ const Orders = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <span className="font-body text-sm text-muted-foreground">
-              Showing {filteredOrders.length} of {orders.length} orders
-            </span>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled className="font-body text-xs">
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="font-body text-xs">
-                Next
-              </Button>
-            </div>
-          </div>
         </div>
-
-        {/* Order Details Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="font-brand text-xl">Order Details</DialogTitle>
-              <DialogDescription className="font-body text-sm">
-                Full information for order {selectedOrder?._id.slice(-8).toUpperCase()}
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedOrder && (
-              <div className="space-y-6">
-                {/* Customer Info Card */}
-                <Card className="border-border bg-muted/30">
-                  <CardContent className="pt-6 space-y-3">
-                    <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Customer Information</h4>
-                    {selectedOrder.fullName && (
-                      <div className="flex items-center gap-2 text-foreground">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-body text-sm font-medium">{selectedOrder.fullName}</span>
-                      </div>
-                    )}
-                    {selectedOrder.email && selectedOrder.email !== "N/A" && (
-                      <div className="flex items-center gap-2 text-foreground">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a href={`mailto:${selectedOrder.email}`} className="font-body text-sm hover:underline">{selectedOrder.email}</a>
-                      </div>
-                    )}
-                    {selectedOrder.phone && selectedOrder.phone !== "N/A" && (
-                      <div className="flex items-center gap-2 text-foreground">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <a href={`tel:${selectedOrder.phone}`} className="font-body text-sm hover:underline">{selectedOrder.phone}</a>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Order Info Card */}
-                <Card className="border-border bg-muted/30">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span className="font-body text-sm">{selectedOrder.date}</span>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          selectedOrder.statusDisplay
-                        )}`}
-                      >
-                        {selectedOrder.statusDisplay}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span className="font-body text-sm">{selectedOrder.shippingAddress}</span>
-                    </div>
-
-                    {/* Delivery Location with Map */}
-                    {selectedOrder.deliveryAddress && (
-                      <div className="space-y-3 pt-2">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-4 w-4 text-foreground" />
-                          <span className="font-body text-sm font-medium text-foreground">Delivery Location</span>
-                        </div>
-                        <p className="font-body text-sm text-foreground pl-6">
-                          {selectedOrder.deliveryAddress}
-                        </p>
-                        {selectedOrder.deliveryLat && selectedOrder.deliveryLng && (
-                          <div className="rounded-lg overflow-hidden border border-border">
-                            <iframe
-                              src={`https://www.google.com/maps?q=${selectedOrder.deliveryLat},${selectedOrder.deliveryLng}&output=embed`}
-                              width="100%"
-                              height="200"
-                              style={{ border: 0 }}
-                              allowFullScreen
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              title="Delivery Location Map"
-                            />
-                          </div>
-                        )}
-                        {selectedOrder.googleMapsLink && (
-                          <a
-                            href={selectedOrder.googleMapsLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 font-body text-xs tracking-[0.1em] uppercase text-foreground hover:text-muted-foreground transition-colors pl-6"
-                          >
-                            <MapPin className="h-3 w-3" />
-                            Open in Google Maps →
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    {selectedOrder.notes && (
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <p className="text-xs text-muted-foreground font-body uppercase tracking-[0.05em] mb-1">Notes</p>
-                        <p className="font-body text-sm">{selectedOrder.notes}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Order Items Card */}
-                <Card className="border-border bg-muted/30">
-                  <CardContent className="pt-6 space-y-3">
-                    <h4 className="font-brand text-sm uppercase tracking-[0.1em] text-muted-foreground mb-2">Order Items</h4>
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div className="flex-1">
-                          <p className="font-body text-sm text-foreground">{item.name}</p>
-                          <p className="font-body text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                        </div>
-                         <p className="font-body text-sm font-medium text-foreground">
-                           ₦{(item.price * item.quantity).toFixed(2)}
-                         </p>
-                      </div>
-                    ))}
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <span className="font-body text-sm font-medium text-foreground">Total</span>
-                       <span className="font-display text-lg font-medium text-foreground">
-                         ₦{selectedOrder.total.toFixed(2)}
-                       </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </AdminLayout>
     </ProtectedRoute>
   );
