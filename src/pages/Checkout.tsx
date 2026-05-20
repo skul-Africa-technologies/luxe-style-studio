@@ -29,7 +29,9 @@ interface FormErrors {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { state, subtotal, itemCount, clearCart } = useCart();
+
+  const { state, subtotal, itemCount } = useCart();
+
   const { items } = state;
 
   const [formData, setFormData] = useState<FormData>({
@@ -42,11 +44,15 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+
+  const [isOrderPlaced, setIsOrderPlaced] =
+    useState(false);
+
   const [orderId, setOrderId] = useState("");
 
-  // EMPTY CART STATE
+  /* ---------------- EMPTY CART ---------------- */
   if (items.length === 0 && !isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -55,10 +61,19 @@ const Checkout = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
-          <ShoppingBag size={48} className="mx-auto text-muted-foreground/30" />
-          <h2 className="font-display text-2xl">Your cart is empty</h2>
+          <ShoppingBag
+            size={48}
+            className="mx-auto text-muted-foreground/30"
+          />
+
+          <h2 className="font-display text-2xl">
+            Your cart is empty
+          </h2>
+
           <button
-            onClick={() => navigate("/#collection")}
+            onClick={() =>
+              navigate("/#collection")
+            }
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to Collection
@@ -68,9 +83,10 @@ const Checkout = () => {
     );
   }
 
-  // VALIDATION
+  /* ---------------- VALIDATION ---------------- */
   const validateForm = () => {
     const newErrors: FormErrors = {};
+
     let valid = true;
 
     if (!formData.name.trim()) {
@@ -78,95 +94,212 @@ const Checkout = () => {
       valid = false;
     }
 
-    if (!formData.email.trim() && !formData.phone.trim()) {
-      newErrors.email = "Email or phone required";
-      newErrors.phone = "Email or phone required";
+    if (
+      !formData.email.trim() &&
+      !formData.phone.trim()
+    ) {
+      newErrors.email =
+        "Email or phone required";
+
+      newErrors.phone =
+        "Email or phone required";
+
       valid = false;
     }
 
     if (!formData.shippingAddress.trim()) {
-      newErrors.shippingAddress = "Address is required";
+      newErrors.shippingAddress =
+        "Address is required";
+
       valid = false;
     }
 
     setErrors(newErrors);
+
     return valid;
   };
 
-  // INPUT CHANGE
+  /* ---------------- INPUT CHANGE ---------------- */
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (
+      errors[name as keyof FormErrors]
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
     }
   };
 
-  // SUBMIT ORDER
-  const handleSubmit = async (e: React.FormEvent) => {
+  /* ---------------- SUBMIT ORDER + PAYSTACK ---------------- */
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+
     setErrorMessage("");
 
     try {
+      /* ---------------- CREATE ORDER PAYLOAD ---------------- */
       const orderPayload = {
         userId: "guest",
+
         fullName: formData.name,
+
         email: formData.email,
+
         phone: formData.phone,
-        deliveryAddress: formData.shippingAddress,
+
+        deliveryAddress:
+          formData.shippingAddress,
+
         notes: formData.note,
+
         currency: "NGN",
+
         items: items.map((item) => ({
           itemId: item.id,
+
           name: item.name,
+
           quantity: item.quantity,
+
           size: item.size ?? null,
+
+          color: item.color ?? null,
+
           price:
             typeof item.price === "string"
-              ? parseFloat(item.price.replace(/[^0-9.-]+/g, ""))
+              ? parseFloat(
+                  item.price.replace(
+                    /[^0-9.-]+/g,
+                    ""
+                  )
+                )
               : Number(item.price),
         })),
+
         total: subtotal,
       };
 
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/orders`;
+      /* ---------------- STEP 1: CREATE ORDER ---------------- */
+      const orderResponse = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/orders`,
+        {
+          method: "POST",
 
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      });
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
+          body: JSON.stringify(
+            orderPayload
+          ),
+        }
+      );
+
+      const orderData =
+        await orderResponse.json();
+
+      if (!orderResponse.ok) {
+        throw new Error(
+          orderData?.message ||
+            "Failed to create order"
+        );
       }
 
-      if (!response.ok) {
-        throw new Error(data?.message || "Order failed");
+      const createdOrderId =
+        orderData._id ||
+        orderData.orderId;
+
+      if (!createdOrderId) {
+        throw new Error(
+          "Order ID not returned"
+        );
       }
 
-      setOrderId(data._id || data.orderId || "ORDER");
-      setIsOrderPlaced(true);
-      clearCart();
+      /* ---------------- STEP 2: INITIALIZE PAYMENT ---------------- */
+      const paymentResponse =
+        await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/payments/initialize`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              orderId: createdOrderId,
+            }),
+          }
+        );
+
+      const paymentData =
+        await paymentResponse.json();
+
+      if (!paymentResponse.ok) {
+        throw new Error(
+          paymentData?.message ||
+            "Failed to initialize payment"
+        );
+      }
+
+      /* ---------------- GET PAYSTACK URL ---------------- */
+      const paymentUrl =
+        paymentData?.data
+          ?.authorization_url;
+
+      if (!paymentUrl) {
+        throw new Error(
+          "Payment link not returned"
+        );
+      }
+
+      /* ---------------- SAVE ORDER ---------------- */
+      localStorage.setItem(
+        "pendingOrderId",
+        createdOrderId
+      );
+
+      setOrderId(createdOrderId);
+
+      /* ---------------- REDIRECT TO PAYSTACK ---------------- */
+      window.location.href =
+        paymentUrl;
     } catch (err: any) {
-      console.error("Checkout error:", err);
-      setErrorMessage(err.message || "Something went wrong");
+      console.error(
+        "Checkout error:",
+        err
+      );
+
+      setErrorMessage(
+        err.message ||
+          "Something went wrong"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // SUCCESS PAGE
+  /* ---------------- SUCCESS PAGE ---------------- */
   if (isOrderPlaced) {
     return (
       <div className="min-h-screen bg-background">
@@ -197,23 +330,26 @@ const Checkout = () => {
             Order ID: {orderId}
           </div>
 
-<div className="flex justify-center gap-3 pt-4">
-             <button
-               onClick={() => navigate("/#collection")}
-               className="px-6 py-3 bg-black text-white"
-             >
-               Continue Shopping
-             </button>
-           </div>
+          <div className="flex justify-center gap-3 pt-4">
+            <button
+              onClick={() =>
+                navigate("/#collection")
+              }
+              className="px-6 py-3 bg-black text-white"
+            >
+              Continue Shopping
+            </button>
+          </div>
         </motion.div>
       </div>
     );
   }
 
-  // MAIN UI
+  /* ---------------- MAIN UI ---------------- */
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
+
       <MobileBottomNav />
 
       <main className="pt-24 max-w-6xl mx-auto px-6 md:px-12 pb-24">
@@ -228,44 +364,62 @@ const Checkout = () => {
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
             <input
               name="name"
               placeholder="Full Name"
-              onChange={handleInputChange}
+              onChange={
+                handleInputChange
+              }
               className="w-full p-3 border"
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+
+            {errors.name && (
+              <p className="text-red-500 text-sm">
+                {errors.name}
+              </p>
+            )}
 
             <input
               name="email"
               placeholder="Email"
-              onChange={handleInputChange}
+              onChange={
+                handleInputChange
+              }
               className="w-full p-3 border"
             />
 
             <input
               name="phone"
               placeholder="Phone"
-              onChange={handleInputChange}
+              onChange={
+                handleInputChange
+              }
               className="w-full p-3 border"
             />
 
             <textarea
               name="shippingAddress"
               placeholder="Shipping Address"
-              onChange={handleInputChange}
+              onChange={
+                handleInputChange
+              }
               className="w-full p-3 border"
             />
 
             <textarea
               name="note"
               placeholder="Order Note (optional)"
-              onChange={handleInputChange}
+              onChange={
+                handleInputChange
+              }
               className="w-full p-3 border"
             />
 
-            {/* ERROR MESSAGE */}
+            {/* ERROR */}
             {errorMessage && (
               <div className="p-3 bg-red-100 text-red-600 border border-red-300 text-sm">
                 {errorMessage}
@@ -280,23 +434,39 @@ const Checkout = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin" size={18} />
+                  <Loader2
+                    className="animate-spin"
+                    size={18}
+                  />
+
                   Processing...
                 </>
               ) : (
-                "Place Order"
+                `Pay ₦${subtotal.toLocaleString(
+                  "en-NG"
+                )}`
               )}
             </button>
           </form>
 
           {/* ORDER SUMMARY */}
           <div className="border p-6 h-fit">
-            <h2 className="text-lg mb-4">Order Summary</h2>
+            <h2 className="text-lg mb-4">
+              Order Summary
+            </h2>
 
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between mb-3">
-                <span>{item.name}</span>
-                <span>× {item.quantity}</span>
+              <div
+                key={item.id}
+                className="flex justify-between mb-3"
+              >
+                <span>
+                  {item.name}
+                </span>
+
+                <span>
+                  × {item.quantity}
+                </span>
               </div>
             ))}
 
@@ -304,12 +474,19 @@ const Checkout = () => {
 
             <div className="flex justify-between">
               <span>Total Items</span>
+
               <span>{itemCount}</span>
             </div>
 
             <div className="flex justify-between font-bold mt-2">
               <span>Total</span>
-              <span>₦{subtotal.toLocaleString("en-NG")}</span>
+
+              <span>
+                ₦
+                {subtotal.toLocaleString(
+                  "en-NG"
+                )}
+              </span>
             </div>
           </div>
         </div>

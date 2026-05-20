@@ -149,7 +149,7 @@ const SingleProductView = ({
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
 
-  const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+  const SIZES = [ "S", "L", "XL", "XXL"];
 
   const handleAddToCart = () => {
     if (!selectedSize) {

@@ -213,4 +213,28 @@ export class OrdersService {
       .find({ userId: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 });
   }
+
+  async markAsPaid(orderId: string) {
+  return this.orderModel.findByIdAndUpdate(orderId, {
+    isPaid: true,
+    paidAt: new Date(),
+    status: 'paid',
+  });
+}
+
+async getTotalRevenue(): Promise<number> {
+  const result = await this.orderModel.aggregate([
+    {
+      $match: { isPaid: true },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$total' },
+      },
+    },
+  ]);
+
+  return result[0]?.total || 0;
+}
 }

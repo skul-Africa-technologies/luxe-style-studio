@@ -42,7 +42,7 @@ export class AdminService {
         this.itemsService.getItemCount(),
         this.usersService.getUserCount(),
         this.ordersService.getOrderCount(),
-        this.paymentsService.getTotalRevenue(),
+        this.ordersService.getTotalRevenue(),
         this.ordersService.findAll(1, 5),
       ]);
 

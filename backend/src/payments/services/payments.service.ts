@@ -1,88 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Payment } from '../entities/payment.entity';
-import { CreatePaymentDto, UpdatePaymentStatusDto } from '../dto';
-import { OrdersService } from '../../orders/services/orders.service';
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+import { PaystackVerifyResponse } from '../types/paystack-response';
 
-/**
- * PaymentsService - Handles payment-related business logic
- * Manual payment system for now, ready for 3PL integration
- */
 @Injectable()
 export class PaymentsService {
-  constructor(
-    @InjectModel(Payment.name) private paymentModel: Model<Payment>,
-    private ordersService: OrdersService,
-  ) {}
+  private baseUrl = process.env.PAYSTACK_BASE_URL;
+  private secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-  async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
-    // Verify order exists
-    await this.ordersService.findOne(createPaymentDto.orderId);
-
-    const payment = new this.paymentModel({
-      ...createPaymentDto,
-      currency: createPaymentDto.currency || 'NGN',
-      orderId: new Types.ObjectId(createPaymentDto.orderId),
-    });
-
-    const savedPayment = await payment.save();
-
-    // Update order payment status
-    await this.ordersService.updateStatus(createPaymentDto.orderId, {
-      status: 'paid',
-    });
-
-    return savedPayment;
-  }
-
-  async findAll(page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.paymentModel.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
-      this.paymentModel.countDocuments(),
-    ]);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async findOne(id: string): Promise<Payment> {
-    const payment = await this.paymentModel.findById(id);
-    if (!payment) {
-      throw new NotFoundException(`Payment with ID ${id} not found`);
-    }
-    return payment;
-  }
-
-  async updateStatus(id: string, updateStatusDto: UpdatePaymentStatusDto): Promise<Payment> {
-    const payment = await this.paymentModel.findByIdAndUpdate(
-      id,
-      { $set: updateStatusDto },
-      { new: true },
+  async initializePayment(email: string, amount: number, orderId: string) {
+    const response = await axios.post(
+      `${this.baseUrl}/transaction/initialize`,
+      {
+        email,
+        amount: amount * 100,
+        metadata: { orderId },
+        callback_url: `${process.env.FRONTEND_URL}/payment/callback`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.secretKey}`,
+          'Content-Type': 'application/json',
+        },
+      },
     );
 
-    if (!payment) {
-      throw new NotFoundException(`Payment with ID ${id} not found`);
-    }
-
-    return payment;
+    return response.data;
   }
 
-  async getPaymentsByOrder(orderId: string): Promise<Payment[]> {
-    return this.paymentModel.find({ orderId: new Types.ObjectId(orderId) });
-  }
+  async verifyPayment(reference: string): Promise<PaystackVerifyResponse> {
+    const response = await axios.get<PaystackVerifyResponse>(
+      `${this.baseUrl}/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.secretKey}`,
+        },
+      },
+    );
 
-  async getTotalRevenue(): Promise<number> {
-    const result = await this.paymentModel.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
-    ]);
-    return result[0]?.total || 0;
+    return response.data;
   }
 }
