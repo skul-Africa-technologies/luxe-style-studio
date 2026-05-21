@@ -10,22 +10,54 @@ const ContactSection = () => {
     message: "",
   });
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
 
-    // Validate fields
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.message.trim()
-    ) {
-      toast.error("Please fill in all fields.");
-      return;
+  // Validate fields
+  if (
+    !formData.name.trim() ||
+    !formData.email.trim() ||
+    !formData.message.trim()
+  ) {
+    toast.error("Please fill in all fields.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/contact`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to send message: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    toast.success(data.message || "Message sent successfully!");
+
+    // Reset form
+    setFormData({
+      name: "",
+      email: "",
+      message: "",
+    });
+  } catch (error: any) {
+    console.error("Contact form error:", error);
+    toast.error(error.message || "Something went wrong");
+  }
+
 
     // Build mailto link
     const mailtoLink = `mailto:victorygray59@gmail.com?subject=${encodeURIComponent(
-      `New Message from ${formData.name}`
+      `New Message from ${formData.name}`,
     )}&body=${encodeURIComponent(
       `Hello Victory,
 
@@ -42,7 +74,7 @@ ${formData.message}
 -----------------------------------
 
 Regards,
-Website Contact Form`
+Website Contact Form`,
     )}`;
 
     // Open email client
@@ -145,7 +177,7 @@ Website Contact Form`
         >
           {/* Instagram */}
           <a
-          href="https://www.instagram.com/matteekayofficial"
+            href="https://www.instagram.com/matteekayofficial"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 font-body text-xs tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"

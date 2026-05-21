@@ -4,10 +4,6 @@ import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
 
 const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "Slideshow", href: "#slideshow" },
-  { label: "Collection", href: "#collection" },
-  { label: "About", href: "#about" },
   { label: "Contact", href: "#contact" },
 ];
 

@@ -9,6 +9,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { SlideshowModule } from './slideshow/slideshow.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
+import { ContactModule } from './contact/contact.module';
 
 
 @Module({
@@ -30,6 +31,7 @@ import { ProductVariantsModule } from './product-variants/product-variants.modul
     AdminModule,
 SlideshowModule,
     ProductVariantsModule,
+    ContactModule,
   ],
 })
 export class AppModule {}
