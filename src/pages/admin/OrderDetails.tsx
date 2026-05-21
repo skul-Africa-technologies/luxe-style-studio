@@ -185,20 +185,17 @@ const OrderDetails = () => {
                     className="flex gap-4 border rounded-lg p-4"
                   >
 
-                    {/* IMAGE */}
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-xs text-gray-400">
-                          No image
-                        </span>
-                      )}
-                    </div>
+                     {/* IMAGE */}
+                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
+                       <img
+                         src={item.image || '/placeholder.svg'}
+                         alt={item.name}
+                         className="w-full h-full object-cover"
+                         onError={(e) => {
+                           e.target.src = '/placeholder.svg';
+                         }}
+                       />
+                     </div>
 
                     {/* INFO */}
                     <div className="flex-1">
