@@ -30,7 +30,8 @@ export class OrdersController {
   @ApiQuery({ name: 'status', required: false })
   @ApiResponse({ status: 200, description: 'List of orders' })
   async findAll(@Query('status') status?: string) {
-    return this.ordersService.findAll(1, 10, status);
+    const filterStatus = status ?? 'paid';
+    return this.ordersService.findAll(1, 10, filterStatus);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

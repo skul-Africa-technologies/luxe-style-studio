@@ -14,12 +14,12 @@ const MobileBottomNav = () => {
 
   if (!isMobile) return null;
 
+
   const navItems = [
     { label: "Home", icon: Home, path: "/" },
     { label: "Collection", icon: Grid3X3, path: "/#collection" },
     { label: "Loved", icon: Heart, path: "/wishlist", badge: wishlistCount },
     { label: "Cart", icon: ShoppingBag, path: "/checkout", badge: itemCount },
-    { label: "Profile", icon: User, path: "/admin/login" },
   ];
 
   const isActive = (path: string) => {

@@ -100,6 +100,9 @@ export class Order extends Document {
 
   @Prop()
   trackingNumber?: string;
+
+  @Prop()
+  paystackReference?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

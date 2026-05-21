@@ -222,19 +222,30 @@ export class OrdersService {
   });
 }
 
-async getTotalRevenue(): Promise<number> {
-  const result = await this.orderModel.aggregate([
-    {
-      $match: { isPaid: true },
-    },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: '$total' },
+  async getTotalRevenue(): Promise<number> {
+    const result = await this.orderModel.aggregate([
+      {
+        $match: { isPaid: true },
       },
-    },
-  ]);
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$total' },
+        },
+      },
+    ]);
 
-  return result[0]?.total || 0;
-}
+    return result[0]?.total || 0;
+  }
+
+  /**
+   * FIND ORDER BY PAYSTACK REFERENCE
+   */
+  async findByPaystackReference(reference: string): Promise<Order> {
+    const order = await this.orderModel.findOne({ paystackReference: reference });
+    if (!order) {
+      throw new NotFoundException(`Order with Paystack reference ${reference} not found`);
+    }
+    return order;
+  }
 }

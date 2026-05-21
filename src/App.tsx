@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import OutfitDetail from "./pages/OutfitDetail";
 import Checkout from "./pages/Checkout";
+import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 import Wishlist from "./pages/Wishlist";
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/outfit/:id" element={<OutfitDetail />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/payment/callback" element={<PaymentCallback />} />
                 <Route path="/wishlist" element={<Wishlist />} />
 
                 {/* ================= ADMIN ROUTES ================= */}

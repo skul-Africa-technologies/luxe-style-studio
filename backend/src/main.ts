@@ -2,9 +2,34 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+
+  // ✅ Raw body middleware for Paystack webhook signature verification
+  app.use((req: any, res: any, next: any) => {
+    if (req.path === '/payments/webhook' && req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk: Buffer) => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        req.rawBody = body;
+        try {
+          req.body = JSON.parse(body);
+        } catch {
+          req.body = {};
+        }
+        next();
+      });
+    } else {
+      next();
+    }
+  });
+
+  // ✅ Global body-parser for all other routes (enabled after webhook middleware)
+  app.use(express.json());
 
   // ✅ Enable CORS (Configured for development and production)
   const frontendUrl = process.env.FRONTEND_URL;

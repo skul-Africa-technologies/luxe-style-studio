@@ -124,14 +124,20 @@ export class CreateOrderDto {
 }
 
 export class UpdateOrderStatusDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
   })
+  @IsOptional()
   @IsEnum(["pending", "paid", "shipped", "delivered", "cancelled"])
-  status: string;
+  status?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  paystackReference?: string;
 }

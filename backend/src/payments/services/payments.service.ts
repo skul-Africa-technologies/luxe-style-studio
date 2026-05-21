@@ -7,8 +7,8 @@ export class PaymentsService {
   private baseUrl = process.env.PAYSTACK_BASE_URL;
   private secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-  async initializePayment(email: string, amount: number, orderId: string) {
-    const response = await axios.post(
+  async initializePayment(email: string, amount: number, orderId: string): Promise<any> {
+    return axios.post(
       `${this.baseUrl}/transaction/initialize`,
       {
         email,
@@ -23,12 +23,10 @@ export class PaymentsService {
         },
       },
     );
-
-    return response.data;
   }
 
-  async verifyPayment(reference: string): Promise<PaystackVerifyResponse> {
-    const response = await axios.get<PaystackVerifyResponse>(
+  async verifyPayment(reference: string): Promise<any> {
+    const response = await axios.get(
       `${this.baseUrl}/transaction/verify/${reference}`,
       {
         headers: {
