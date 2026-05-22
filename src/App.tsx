@@ -29,6 +29,7 @@ import EditItem from "./pages/editItem";
 import SlideshowManagement from "./pages/admin/Slideshow";
 import AdminVariantManager from "./pages/admin/AdminVariantManager";
 import OrderDetails from "./pages/admin/OrderDetails";
+import EditSlideshow from "./pages/admin/Editslideshow";
 
 const queryClient = new QueryClient();
 
@@ -126,6 +127,15 @@ const App = () => (
                   element={
                     <AdminThemeProvider>
                       <Users />
+                    </AdminThemeProvider>
+                  }
+                />
+
+                <Route
+                  path="/admin/edit-slideshow/:id"
+                  element={
+                    <AdminThemeProvider>
+                      <EditSlideshow />
                     </AdminThemeProvider>
                   }
                 />
