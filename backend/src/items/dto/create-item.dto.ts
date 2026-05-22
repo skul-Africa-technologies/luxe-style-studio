@@ -48,7 +48,7 @@ export class CreateItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  color!: string | null;
+  color?: string | null;
 
   @ApiPropertyOptional({
     example: 10,
@@ -66,53 +66,3 @@ export class CreateItemDto {
   size?: string;
 }
 
-/**
- * DTO for updating an existing item (all fields optional)
- */
-export class UpdateItemDto extends PartialType(CreateItemDto) {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  category?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUrl()
-  imageUrl?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  color!: string | null;
-
-  @ApiPropertyOptional({
-    example: 10,
-    description: "Stock quantity",
-    default: 0,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  stock?: number = 0;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  size?: string;
-}

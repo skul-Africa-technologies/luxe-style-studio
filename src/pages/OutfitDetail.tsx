@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingBag, Check, Heart, X } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Heart, X, Package } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -35,6 +35,8 @@ interface Variant {
 interface OutfitWithVariants extends Outfit {
   variants?: Variant[];
   basePrice?: string;
+  color?: string;
+  stock?: number;
 }
 
 /* ───────────────────────────────────────── */
@@ -50,6 +52,53 @@ const buildWhatsappUrl = (message: string) =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 /* ───────────────────────────────────────── */
+/* Stock Badge                               */
+/* ───────────────────────────────────────── */
+
+const StockBadge = ({ stock }: { stock?: number }) => {
+  if (stock === undefined || stock === null) return null;
+
+  const outOfStock = stock <= 0;
+  const lowStock = stock > 0 && stock <= 5;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium ${
+        outOfStock
+          ? "bg-red-50 text-red-600 border border-red-200"
+          : lowStock
+            ? "bg-amber-50 text-amber-600 border border-amber-200"
+            : "bg-green-50 text-green-600 border border-green-200"
+      }`}
+    >
+      <Package size={12} />
+      {outOfStock ? "Out of Stock" : lowStock ? `Only ${stock} left` : `${stock} in stock`}
+    </div>
+  );
+};
+
+/* ───────────────────────────────────────── */
+/* Color Display                             */
+/* ───────────────────────────────────────── */
+
+const ColorDisplay = ({ color }: { color?: string }) => {
+  if (!color) return null;
+
+  return (
+    <div className="space-y-1.5">
+      <p className="uppercase text-xs tracking-widest text-muted-foreground">
+        Color
+      </p>
+      <div className="inline-flex items-center gap-2 px-4 h-10 border border-border rounded-xl bg-secondary/40">
+        <span className="text-xs uppercase tracking-widest font-medium">
+          {color}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* ───────────────────────────────────────── */
 /* Color Notice Modal — standalone component */
 /* ───────────────────────────────────────── */
 
@@ -60,7 +109,6 @@ const ColorNoticeModal = ({
   show: boolean;
   onClose: () => void;
 }) => {
-  // Close on backdrop click or Escape key
   useEffect(() => {
     if (!show) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -70,7 +118,6 @@ const ColorNoticeModal = ({
     return () => window.removeEventListener("keydown", handleKey);
   }, [show, onClose]);
 
-  // Prevent body scroll while open
   useEffect(() => {
     if (show) {
       document.body.style.overflow = "hidden";
@@ -100,7 +147,6 @@ const ColorNoticeModal = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.97 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            /* Stop backdrop-click from closing when clicking inside */
             onClick={(e) => e.stopPropagation()}
             className="
               w-full sm:max-w-md
@@ -111,7 +157,6 @@ const ColorNoticeModal = ({
               relative
             "
           >
-            {/* Close button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
@@ -120,7 +165,6 @@ const ColorNoticeModal = ({
               <X size={18} className="text-neutral-500" />
             </button>
 
-            {/* Drag handle — visible on mobile only */}
             <div className="mx-auto mb-5 w-10 h-1 rounded-full bg-neutral-200 sm:hidden" />
 
             <div className="space-y-5 text-center">
@@ -128,11 +172,9 @@ const ColorNoticeModal = ({
                 🎨
               </div>
 
-              <div className="space-y-1">
-                <h2 className="text-lg sm:text-xl font-semibold">
-                  Color Selection Notice
-                </h2>
-              </div>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                Color Selection Notice
+              </h2>
 
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Please note that any selected color may be delivered either as
@@ -161,32 +203,20 @@ const ColorNoticeModal = ({
 const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
   const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [showColorNotice, setShowColorNotice] = useState(false);
-
   const [isAdded, setIsAdded] = useState(false);
-
   const [sizeError, setSizeError] = useState(false);
-  const [colorError, setColorError] = useState(false);
 
   const SIZES = ["S", "L", "XL", "XXL"];
 
-  const COLORS = ["Black", "White", "Red", "Blue", "Green"];
+  const outOfStock = (outfit.stock ?? 0) <= 0;
+
   const handleAdd = () => {
     if (!selectedSize) {
       setSizeError(true);
-    }
-
-    if (!selectedColor) {
-      setColorError(true);
-    }
-
-    if (!selectedSize || !selectedColor) {
       return;
     }
 
     setSizeError(false);
-    setColorError(false);
 
     addItem({
       id: outfit.id,
@@ -196,11 +226,10 @@ const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
       category: outfit.category,
       style: outfit.style || "",
       size: selectedSize,
-      color: selectedColor,
+      color: outfit.color || "",
     });
 
     setIsAdded(true);
-
     setTimeout(() => setIsAdded(false), 2000);
   };
 
@@ -209,22 +238,28 @@ const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
       `🛍️ *Item:* ${outfit.name}\n` +
       `📦 *Category:* ${outfit.category || "N/A"}\n` +
       `📐 *Size:* ${selectedSize || "Not selected"}\n` +
-      `🎨 *Color:* ${selectedColor || "Not selected"}\n` +
+      `🎨 *Color:* ${outfit.color || "N/A"}\n` +
       `💰 *Price:* ${outfit.price}\n` +
       `🔢 *Quantity:* 1\n\n` +
       `Thank you!`,
   );
 
   return (
-    <>
-      <ColorNoticeModal
-        show={showColorNotice}
-        onClose={() => setShowColorNotice(false)}
-      />
+    <div className="space-y-4 pt-2 border-t border-border">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground">
+        Main Item
+      </p>
 
-      <div className="space-y-3 pt-2 border-t border-border">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          Main Item — Select Size
+      {/* Color from backend data */}
+      <ColorDisplay color={outfit.color} />
+
+      {/* Stock */}
+      <StockBadge stock={outfit.stock} />
+
+      {/* Size selection */}
+      <div className="space-y-2">
+        <p className="uppercase text-xs tracking-widest text-muted-foreground">
+          Select Size
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -246,61 +281,36 @@ const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
           ))}
         </div>
 
-        <div className="space-y-3">
-          <p className="uppercase text-xs tracking-widest text-muted-foreground">
-            Select Color
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                onClick={() => {
-                  setSelectedColor(color);
-                  setColorError(false);
-                  setShowColorNotice(true);
-                }}
-                className={`px-4 h-12 border text-xs uppercase tracking-widest transition-all duration-200 ${
-                  selectedColor === color
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent text-foreground border-border hover:border-foreground"
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-
-          {colorError && (
-            <p className="text-xs text-red-500">
-              Please select a color before adding to cart
-            </p>
-          )}
-        </div>
-
         {sizeError && (
           <p className="text-xs text-red-500">Please select a size</p>
         )}
+      </div>
 
-        <button
-          onClick={handleAdd}
-          className={`w-full py-3 flex items-center justify-center gap-2 uppercase text-xs tracking-widest transition-colors duration-300 rounded-xl ${
-            isAdded
+      <button
+        disabled={outOfStock}
+        onClick={handleAdd}
+        className={`w-full py-3 flex items-center justify-center gap-2 uppercase text-xs tracking-widest transition-colors duration-300 rounded-xl ${
+          outOfStock
+            ? "bg-neutral-300 text-white cursor-not-allowed"
+            : isAdded
               ? "bg-green-700 text-white"
               : "bg-black text-white hover:bg-neutral-800"
-          }`}
-        >
-          {isAdded ? (
-            <>
-              <Check size={14} /> Added
-            </>
-          ) : (
-            <>
-              <ShoppingBag size={14} /> Add Main Item to Cart
-            </>
-          )}
-        </button>
+        }`}
+      >
+        {isAdded ? (
+          <>
+            <Check size={14} /> Added
+          </>
+        ) : outOfStock ? (
+          "Out of Stock"
+        ) : (
+          <>
+            <ShoppingBag size={14} /> Add Main Item to Cart
+          </>
+        )}
+      </button>
 
+      {!outOfStock && (
         <a
           href={whatsappUrl}
           target="_blank"
@@ -309,8 +319,8 @@ const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
         >
           Order via WhatsApp
         </a>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
@@ -330,32 +340,20 @@ const SingleProductView = ({
   const { addItem } = useCart();
 
   const [isAdded, setIsAdded] = useState(false);
-
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-
   const [sizeError, setSizeError] = useState(false);
-  const [colorError, setColorError] = useState(false);
 
   const SIZES = ["S", "L", "XL", "XXL"];
 
-  const COLORS = ["Black", "White", "Red", "Blue", "Green"];
+  const outOfStock = (outfit.stock ?? 0) <= 0;
 
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
-    }
-
-    if (!selectedColor) {
-      setColorError(true);
-    }
-
-    if (!selectedSize || !selectedColor) {
       return;
     }
 
     setSizeError(false);
-    setColorError(false);
 
     addItem({
       id: outfit.id,
@@ -365,11 +363,10 @@ const SingleProductView = ({
       category: outfit.category,
       style: outfit.style || "",
       size: selectedSize,
-      color: selectedColor,
+      color: outfit.color || "",
     });
 
     setIsAdded(true);
-
     setTimeout(() => setIsAdded(false), 2000);
   };
 
@@ -378,7 +375,7 @@ const SingleProductView = ({
       `🛍️ *Item:* ${outfit.name}\n` +
       `📦 *Category:* ${outfit.category || "N/A"}\n` +
       `📐 *Size:* ${selectedSize || "Not selected"}\n` +
-      `🎨 *Color:* ${selectedColor || "Not selected"}\n` +
+      `🎨 *Color:* ${outfit.color || "N/A"}\n` +
       `💰 *Price:* ${outfit.price}\n` +
       `🔢 *Quantity:* 1\n\n` +
       `Please confirm availability and delivery details. Thank you!`,
@@ -415,6 +412,12 @@ const SingleProductView = ({
 
         <p className="text-muted-foreground">{outfit.description}</p>
 
+        {/* Color from backend */}
+        <ColorDisplay color={outfit.color} />
+
+        {/* Stock */}
+        <StockBadge stock={outfit.stock} />
+
         {/* SIZE */}
         <div className="space-y-3">
           <p className="uppercase text-xs tracking-widest text-muted-foreground">
@@ -447,51 +450,24 @@ const SingleProductView = ({
           )}
         </div>
 
-        {/* COLOR */}
-        <div className="space-y-3">
-          <p className="uppercase text-xs tracking-widest text-muted-foreground">
-            Select Color
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                onClick={() => {
-                  setSelectedColor(color);
-                  setColorError(false);
-                }}
-                className={`px-4 h-12 border text-xs uppercase tracking-widest transition-all duration-200 ${
-                  selectedColor === color
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent text-foreground border-border hover:border-foreground"
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-
-          {colorError && (
-            <p className="text-xs text-red-500">
-              Please select a color before adding to cart
-            </p>
-          )}
-        </div>
-
         <div className="space-y-4">
           <button
+            disabled={outOfStock}
             onClick={handleAddToCart}
             className={`w-full py-4 flex items-center justify-center gap-2 uppercase text-xs tracking-widest transition-colors duration-300 ${
-              isAdded
-                ? "bg-green-700 text-white"
-                : "bg-black text-white hover:bg-neutral-800"
+              outOfStock
+                ? "bg-neutral-300 text-white cursor-not-allowed"
+                : isAdded
+                  ? "bg-green-700 text-white"
+                  : "bg-black text-white hover:bg-neutral-800"
             }`}
           >
             {isAdded ? (
               <>
                 <Check size={16} /> Added
               </>
+            ) : outOfStock ? (
+              "Out of Stock"
             ) : (
               <>
                 <ShoppingBag size={16} /> Add to Cart
@@ -499,14 +475,16 @@ const SingleProductView = ({
             )}
           </button>
 
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-4 border text-center uppercase text-xs tracking-widest block hover:bg-foreground hover:text-background transition-colors duration-300"
-          >
-            Order via WhatsApp
-          </a>
+          {!outOfStock && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-4 border text-center uppercase text-xs tracking-widest block hover:bg-foreground hover:text-background transition-colors duration-300"
+            >
+              Order via WhatsApp
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -715,7 +693,6 @@ const VariantCardMobile = ({
       </div>
 
       <div className="flex flex-col gap-2 flex-shrink-0">
-        {/* Cart icon button */}
         <button
           disabled={outOfStock}
           onClick={handleAdd}
@@ -730,7 +707,6 @@ const VariantCardMobile = ({
           {isAdded ? <Check size={16} /> : <ShoppingBag size={16} />}
         </button>
 
-        {/* WhatsApp icon button */}
         {!outOfStock && (
           <a
             href={whatsappUrl}

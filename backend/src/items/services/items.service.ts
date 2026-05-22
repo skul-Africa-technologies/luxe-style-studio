@@ -4,8 +4,9 @@ import { Model, Types } from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { Item } from '../entities/item.entity';
 import { ProductVariant } from '../../product-variants/entities/product-variant.entity';
-import { CreateItemDto, UpdateItemDto } from '../dto';
 import { PaginatedResult } from '../../common/interfaces';
+import { UpdateItemDto } from '../dto/UpdateItemDto';
+import { CreateItemDto } from '../dto';
 
 @Injectable()
 export class ItemsService {

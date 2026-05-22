@@ -6,11 +6,13 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { ItemsService } from '../services/items.service';
-import { CreateItemDto, UpdateItemDto } from '../dto';
+
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
 import { Roles, CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces';
 import { memoryStorage } from 'multer';
+import { CreateItemDto } from '../dto';
+import { UpdateItemDto } from '../dto/UpdateItemDto';
 
 /**
  * ItemsController - Handles all item-related HTTP requests
