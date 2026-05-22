@@ -38,6 +38,9 @@ interface Item {
   price: number;
   category: string;
   imageUrl: string;
+  size?: string;
+  color?: string;
+  stock?: number;
 }
 
 const Items = () => {
@@ -164,18 +167,22 @@ const Items = () => {
       <div className="border border-border rounded-lg bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-             <TableHeader>
-               <TableRow className="bg-muted/50">
-                 <TableHead className="w-20">Thumbnail</TableHead>
-                 <TableHead>Name</TableHead>
-                 <TableHead className="hidden md:table-cell">
-                   Description
-                 </TableHead>
-                 <TableHead>Price</TableHead>
-                 <TableHead className="hidden lg:table-cell">Category</TableHead>
-                 <TableHead className="text-right w-36">Actions</TableHead>
-               </TableRow>
-             </TableHeader>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-20">Thumbnail</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Description
+                </TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="hidden md:table-cell">Size</TableHead>
+                <TableHead className="hidden md:table-cell">Color</TableHead>
+                <TableHead className="hidden md:table-cell">Stock</TableHead>
+                <TableHead className="hidden lg:table-cell">Category</TableHead>
+                <TableHead className="hidden lg:table-cell">Category</TableHead>
+                <TableHead className="text-right w-36">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
@@ -233,42 +240,68 @@ const Items = () => {
                       <div className="font-medium font-body">
                         ₦{item.price.toLocaleString("en-NG")}
                       </div>
-</TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                          {item.category ?? 'None'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(item._id)}
-                            className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
-                          >
-                            <Edit size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(item._id)}
-                            className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1.5 h-8 text-xs rounded-full"
-                            onClick={() => navigate(`/admin/manage-variants/${item._id}`)}
-                          >
-                            <Settings size={12} />
-                            Manage Variants
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    </TableCell>
+
+                    <TableCell className="hidden md:table-cell">
+                      <div className="text-sm font-body">
+                        {item.size || "N/A"}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="hidden md:table-cell">
+                      <div className="text-sm font-body">
+                        {item.color || "N/A"}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="hidden md:table-cell">
+                      <div
+                        className={`text-sm font-medium ${
+                          (item.stock ?? 0) <= 0
+                            ? "text-red-500"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {item.stock ?? 0}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        {item.category ?? "None"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item._id)}
+                          className="hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(item._id)}
+                          className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 h-8 text-xs rounded-full"
+                          onClick={() =>
+                            navigate(`/admin/manage-variants/${item._id}`)
+                          }
+                        >
+                          <Settings size={12} />
+                          Manage Variants
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
             </TableBody>

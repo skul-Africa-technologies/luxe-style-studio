@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, ShoppingBag, Check, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, ShoppingBag, Check, Heart, X } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -10,6 +10,12 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 import { fetchOutfitById, Outfit } from "@/data/outfits";
+
+/* ───────────────────────────────────────── */
+/* Constants                                 */
+/* ───────────────────────────────────────── */
+
+const WHATSAPP_NUMBER = "2349036219219";
 
 /* ───────────────────────────────────────── */
 /* Types                                     */
@@ -40,29 +46,147 @@ const formatPriceFromNgn = (price?: number): string => {
   return `₦${price.toLocaleString("en-NG")}`;
 };
 
+const buildWhatsappUrl = (message: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+/* ───────────────────────────────────────── */
+/* Color Notice Modal — standalone component */
+/* ───────────────────────────────────────── */
+
+const ColorNoticeModal = ({
+  show,
+  onClose,
+}: {
+  show: boolean;
+  onClose: () => void;
+}) => {
+  // Close on backdrop click or Escape key
+  useEffect(() => {
+    if (!show) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [show, onClose]);
+
+  // Prevent body scroll while open
+  useEffect(() => {
+    if (show) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [show]);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key="color-notice-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-4"
+          onClick={onClose}
+        >
+          <motion.div
+            key="color-notice-panel"
+            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            /* Stop backdrop-click from closing when clicking inside */
+            onClick={(e) => e.stopPropagation()}
+            className="
+              w-full sm:max-w-md
+              rounded-t-3xl sm:rounded-3xl
+              bg-white
+              p-6 sm:p-8
+              shadow-2xl
+              relative
+            "
+          >
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} className="text-neutral-500" />
+            </button>
+
+            {/* Drag handle — visible on mobile only */}
+            <div className="mx-auto mb-5 w-10 h-1 rounded-full bg-neutral-200 sm:hidden" />
+
+            <div className="space-y-5 text-center">
+              <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center mx-auto text-xl">
+                🎨
+              </div>
+
+              <div className="space-y-1">
+                <h2 className="text-lg sm:text-xl font-semibold">
+                  Color Selection Notice
+                </h2>
+              </div>
+
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Please note that any selected color may be delivered either as
+                the main product displayed or from the available product
+                variants.
+              </p>
+
+              <button
+                onClick={onClose}
+                className="w-full h-12 rounded-2xl bg-black text-white uppercase text-xs tracking-widest hover:bg-neutral-800 active:scale-[0.98] transition-all"
+              >
+                I Understand
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 /* ───────────────────────────────────────── */
 /* Main outfit add to cart (with variants)  */
 /* ───────────────────────────────────────── */
 
-const MainOutfitActions = ({
-  outfit,
-}: {
-  outfit: OutfitWithVariants;
-}) => {
+const MainOutfitActions = ({ outfit }: { outfit: OutfitWithVariants }) => {
   const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [showColorNotice, setShowColorNotice] = useState(false);
+
   const [isAdded, setIsAdded] = useState(false);
+
   const [sizeError, setSizeError] = useState(false);
+  const [colorError, setColorError] = useState(false);
 
-  const SIZES = [ "S", "L", "XL", "XXL"];
+  const SIZES = ["S", "L", "XL", "XXL"];
 
+  const COLORS = ["Black", "White", "Red", "Blue", "Green"];
   const handleAdd = () => {
     if (!selectedSize) {
       setSizeError(true);
+    }
+
+    if (!selectedColor) {
+      setColorError(true);
+    }
+
+    if (!selectedSize || !selectedColor) {
       return;
     }
 
     setSizeError(false);
+    setColorError(false);
 
     addItem({
       id: outfit.id,
@@ -72,62 +196,121 @@ const MainOutfitActions = ({
       category: outfit.category,
       style: outfit.style || "",
       size: selectedSize,
+      color: selectedColor,
     });
 
     setIsAdded(true);
+
     setTimeout(() => setIsAdded(false), 2000);
   };
 
+  const whatsappUrl = buildWhatsappUrl(
+    `Hello MATTEEKAY! 👋 I'd like to order the following:\n\n` +
+      `🛍️ *Item:* ${outfit.name}\n` +
+      `📦 *Category:* ${outfit.category || "N/A"}\n` +
+      `📐 *Size:* ${selectedSize || "Not selected"}\n` +
+      `🎨 *Color:* ${selectedColor || "Not selected"}\n` +
+      `💰 *Price:* ${outfit.price}\n` +
+      `🔢 *Quantity:* 1\n\n` +
+      `Thank you!`,
+  );
+
   return (
-    <div className="space-y-3 pt-2 border-t border-border">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">
-        Main Item — Select Size
-      </p>
+    <>
+      <ColorNoticeModal
+        show={showColorNotice}
+        onClose={() => setShowColorNotice(false)}
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {SIZES.map((size) => (
-          <button
-            key={size}
-            onClick={() => {
-              setSelectedSize(size);
-              setSizeError(false);
-            }}
-            className={`w-10 h-10 border text-xs uppercase tracking-widest transition-all duration-200 ${
-              selectedSize === size
-                ? "bg-foreground text-background border-foreground"
-                : "border-border hover:border-foreground"
-            }`}
-          >
-            {size}
-          </button>
-        ))}
-      </div>
-
-      {sizeError && (
-        <p className="text-xs text-red-500">
-          Please select a size
+      <div className="space-y-3 pt-2 border-t border-border">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+          Main Item — Select Size
         </p>
-      )}
 
-      <button
-        onClick={handleAdd}
-        className={`w-full py-3 flex items-center justify-center gap-2 uppercase text-xs tracking-widest transition-colors duration-300 rounded-xl ${
-          isAdded
-            ? "bg-green-700 text-white"
-            : "bg-black text-white hover:bg-neutral-800"
-        }`}
-      >
-        {isAdded ? (
-          <>
-            <Check size={14} /> Added
-          </>
-        ) : (
-          <>
-            <ShoppingBag size={14} /> Add Main Item to Cart
-          </>
+        <div className="flex flex-wrap gap-2">
+          {SIZES.map((size) => (
+            <button
+              key={size}
+              onClick={() => {
+                setSelectedSize(size);
+                setSizeError(false);
+              }}
+              className={`w-10 h-10 border text-xs uppercase tracking-widest transition-all duration-200 ${
+                selectedSize === size
+                  ? "bg-foreground text-background border-foreground"
+                  : "border-border hover:border-foreground"
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          <p className="uppercase text-xs tracking-widest text-muted-foreground">
+            Select Color
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((color) => (
+              <button
+                key={color}
+                onClick={() => {
+                  setSelectedColor(color);
+                  setColorError(false);
+                  setShowColorNotice(true);
+                }}
+                className={`px-4 h-12 border text-xs uppercase tracking-widest transition-all duration-200 ${
+                  selectedColor === color
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-transparent text-foreground border-border hover:border-foreground"
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+
+          {colorError && (
+            <p className="text-xs text-red-500">
+              Please select a color before adding to cart
+            </p>
+          )}
+        </div>
+
+        {sizeError && (
+          <p className="text-xs text-red-500">Please select a size</p>
         )}
-      </button>
-    </div>
+
+        <button
+          onClick={handleAdd}
+          className={`w-full py-3 flex items-center justify-center gap-2 uppercase text-xs tracking-widest transition-colors duration-300 rounded-xl ${
+            isAdded
+              ? "bg-green-700 text-white"
+              : "bg-black text-white hover:bg-neutral-800"
+          }`}
+        >
+          {isAdded ? (
+            <>
+              <Check size={14} /> Added
+            </>
+          ) : (
+            <>
+              <ShoppingBag size={14} /> Add Main Item to Cart
+            </>
+          )}
+        </button>
+
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-3 flex items-center justify-center border rounded-xl uppercase text-xs tracking-widest hover:bg-foreground hover:text-background transition-colors duration-300"
+        >
+          Order via WhatsApp
+        </a>
+      </div>
+    </>
   );
 };
 
@@ -145,19 +328,34 @@ const SingleProductView = ({
   onToggleWishlist: () => void;
 }) => {
   const { addItem } = useCart();
-  const [isAdded, setIsAdded] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [sizeError, setSizeError] = useState(false);
 
-  const SIZES = [ "S", "L", "XL", "XXL"];
+  const [isAdded, setIsAdded] = useState(false);
+
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  const [sizeError, setSizeError] = useState(false);
+  const [colorError, setColorError] = useState(false);
+
+  const SIZES = ["S", "L", "XL", "XXL"];
+
+  const COLORS = ["Black", "White", "Red", "Blue", "Green"];
 
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
+    }
+
+    if (!selectedColor) {
+      setColorError(true);
+    }
+
+    if (!selectedSize || !selectedColor) {
       return;
     }
 
     setSizeError(false);
+    setColorError(false);
 
     addItem({
       id: outfit.id,
@@ -167,17 +365,24 @@ const SingleProductView = ({
       category: outfit.category,
       style: outfit.style || "",
       size: selectedSize,
+      color: selectedColor,
     });
 
     setIsAdded(true);
+
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(
-    `Hello MATTEEKAY I want to purchase: ${outfit.name}. Size: ${
-      selectedSize || "N/A"
-    }. Price: ${outfit.price}`
-  )}`;
+  const whatsappUrl = buildWhatsappUrl(
+    `Hello MATTEEKAY! 👋 I'd like to order the following:\n\n` +
+      `🛍️ *Item:* ${outfit.name}\n` +
+      `📦 *Category:* ${outfit.category || "N/A"}\n` +
+      `📐 *Size:* ${selectedSize || "Not selected"}\n` +
+      `🎨 *Color:* ${selectedColor || "Not selected"}\n` +
+      `💰 *Price:* ${outfit.price}\n` +
+      `🔢 *Quantity:* 1\n\n` +
+      `Please confirm availability and delivery details. Thank you!`,
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -210,6 +415,7 @@ const SingleProductView = ({
 
         <p className="text-muted-foreground">{outfit.description}</p>
 
+        {/* SIZE */}
         <div className="space-y-3">
           <p className="uppercase text-xs tracking-widest text-muted-foreground">
             Select Size
@@ -237,6 +443,38 @@ const SingleProductView = ({
           {sizeError && (
             <p className="text-xs text-red-500">
               Please select a size before adding to cart
+            </p>
+          )}
+        </div>
+
+        {/* COLOR */}
+        <div className="space-y-3">
+          <p className="uppercase text-xs tracking-widest text-muted-foreground">
+            Select Color
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((color) => (
+              <button
+                key={color}
+                onClick={() => {
+                  setSelectedColor(color);
+                  setColorError(false);
+                }}
+                className={`px-4 h-12 border text-xs uppercase tracking-widest transition-all duration-200 ${
+                  selectedColor === color
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-transparent text-foreground border-border hover:border-foreground"
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+
+          {colorError && (
+            <p className="text-xs text-red-500">
+              Please select a color before adding to cart
             </p>
           )}
         </div>
@@ -296,30 +534,29 @@ const VariantCardDesktop = ({
 
   const handleAdd = () => {
     if (outOfStock) return;
-
     addItem({
       id: variantId,
-      name: `${outfit.name}${
-        variant.color ? " — " + variant.color : ""
-      }${variant.size ? " / " + variant.size : ""}`,
+      name: `${outfit.name}${variant.color ? " — " + variant.color : ""}${variant.size ? " / " + variant.size : ""}`,
       price: variantPrice,
       image: variantImage,
       category: outfit.category,
       style: outfit.style || "",
       size: variant.size || "",
     });
-
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);
   };
 
-  const whatsappUrl = `https://wa.me/1234567890?text=${encodeURIComponent(
-    `Hello MATTEEKAY I want to purchase: ${outfit.name}${
-      variant.color ? " — " + variant.color : ""
-    }${
-      variant.size ? " / Size: " + variant.size : ""
-    }. Price: ${variantPrice}`
-  )}`;
+  const whatsappUrl = buildWhatsappUrl(
+    `Hello MATTEEKAY! 👋 I'd like to order the following:\n\n` +
+      `🛍️ *Item:* ${outfit.name}\n` +
+      `🎨 *Color:* ${variant.color || "N/A"}\n` +
+      `📐 *Size:* ${variant.size || "N/A"}\n` +
+      `🎨 *Color:* ${variant.color || "N/A"}\n` +
+      `💰 *Price:* ${variantPrice}\n` +
+      `🔢 *Quantity:* 1\n\n` +
+      `Please confirm availability and delivery details. Thank you!`,
+  );
 
   return (
     <motion.div
@@ -333,7 +570,6 @@ const VariantCardDesktop = ({
           alt={variant.color || outfit.name}
           className="w-full h-full object-cover"
         />
-
         {outOfStock && (
           <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
             Out of Stock
@@ -347,19 +583,14 @@ const VariantCardDesktop = ({
             {variant.color}
           </h3>
         )}
-
         {variant.size && (
           <span className="inline-block text-xs border px-3 py-1 rounded-xl">
             {variant.size}
           </span>
         )}
-
         <p className="text-sm font-medium">{variantPrice}</p>
-
         {variant.stock !== undefined && !outOfStock && (
-          <p className="text-xs text-green-600">
-            {variant.stock} in stock
-          </p>
+          <p className="text-xs text-green-600">{variant.stock} in stock</p>
         )}
 
         <button
@@ -369,8 +600,8 @@ const VariantCardDesktop = ({
             outOfStock
               ? "bg-neutral-300 text-white cursor-not-allowed"
               : isAdded
-              ? "bg-green-700 text-white"
-              : "bg-black text-white hover:bg-neutral-800"
+                ? "bg-green-700 text-white"
+                : "bg-black text-white hover:bg-neutral-800"
           }`}
         >
           {isAdded ? (
@@ -422,22 +653,28 @@ const VariantCardMobile = ({
 
   const handleAdd = () => {
     if (outOfStock) return;
-
     addItem({
       id: variantId,
-      name: `${outfit.name}${
-        variant.color ? " — " + variant.color : ""
-      }${variant.size ? " / " + variant.size : ""}`,
+      name: `${outfit.name}${variant.color ? " — " + variant.color : ""}${variant.size ? " / " + variant.size : ""}`,
       price: variantPrice,
       image: variantImage,
       category: outfit.category,
       style: outfit.style || "",
       size: variant.size || "",
     });
-
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);
   };
+
+  const whatsappUrl = buildWhatsappUrl(
+    `Hello MATTEEKAY! 👋 I'd like to order the following:\n\n` +
+      `🛍️ *Item:* ${outfit.name}\n` +
+      `🎨 *Color:* ${variant.color || "N/A"}\n` +
+      `📐 *Size:* ${variant.size || "N/A"}\n` +
+      `💰 *Price:* ${variantPrice}\n` +
+      `🔢 *Quantity:* 1\n\n` +
+      `Please confirm availability and delivery details. Thank you!`,
+  );
 
   return (
     <motion.div
@@ -451,7 +688,6 @@ const VariantCardMobile = ({
           alt={variant.color || outfit.name}
           className="w-full h-full object-cover"
         />
-
         {outOfStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <span className="text-white text-[9px] text-center px-1">
@@ -467,35 +703,48 @@ const VariantCardMobile = ({
             {variant.color}
           </p>
         )}
-
         {variant.size && (
           <span className="inline-block text-xs border px-2 py-0.5 rounded-lg">
             {variant.size}
           </span>
         )}
-
         <p className="text-sm font-medium">{variantPrice}</p>
-
         {variant.stock !== undefined && !outOfStock && (
-          <p className="text-xs text-green-600">
-            {variant.stock} in stock
-          </p>
+          <p className="text-xs text-green-600">{variant.stock} in stock</p>
         )}
       </div>
 
-      <button
-        disabled={outOfStock}
-        onClick={handleAdd}
-        className={`flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 ${
-          outOfStock
-            ? "bg-neutral-300 text-white cursor-not-allowed"
-            : isAdded
-            ? "bg-green-700 text-white"
-            : "bg-black text-white hover:bg-neutral-800"
-        }`}
-      >
-        {isAdded ? <Check size={16} /> : <ShoppingBag size={16} />}
-      </button>
+      <div className="flex flex-col gap-2 flex-shrink-0">
+        {/* Cart icon button */}
+        <button
+          disabled={outOfStock}
+          onClick={handleAdd}
+          className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 ${
+            outOfStock
+              ? "bg-neutral-300 text-white cursor-not-allowed"
+              : isAdded
+                ? "bg-green-700 text-white"
+                : "bg-black text-white hover:bg-neutral-800"
+          }`}
+        >
+          {isAdded ? <Check size={16} /> : <ShoppingBag size={16} />}
+        </button>
+
+        {/* WhatsApp icon button */}
+        {!outOfStock && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-foreground hover:text-background transition-colors duration-300"
+            title="Order via WhatsApp"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            </svg>
+          </a>
+        )}
+      </div>
     </motion.div>
   );
 };
@@ -513,10 +762,7 @@ const OutfitDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const variants = Array.isArray(outfit?.variants)
-    ? outfit.variants
-    : [];
-
+  const variants = Array.isArray(outfit?.variants) ? outfit.variants : [];
   const hasVariants = variants.length > 0;
   const isLoved = outfit ? isItemLoved(outfit.id) : false;
 
@@ -524,29 +770,19 @@ const OutfitDetail = () => {
     const load = async () => {
       try {
         setLoading(true);
-
         const data = await fetchOutfitById(id || "");
-
         if (!data) throw new Error("Item not found");
-
         setOutfit({
           ...data,
-          variants: Array.isArray(data.variants)
-            ? data.variants
-            : [],
+          variants: Array.isArray(data.variants) ? data.variants : [],
           basePrice: data.price,
         });
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch outfit"
-        );
+        setError(err instanceof Error ? err.message : "Failed to fetch outfit");
       } finally {
         setLoading(false);
       }
     };
-
     if (id) load();
   }, [id]);
 
@@ -587,7 +823,6 @@ const OutfitDetail = () => {
       <MobileBottomNav />
 
       <main className="pt-24 max-w-7xl mx-auto px-4 md:px-12 pb-24">
-        {/* BACK */}
         <motion.button
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -598,7 +833,7 @@ const OutfitDetail = () => {
           Back to Collection
         </motion.button>
 
-        {/* NO VARIANTS — classic layout */}
+        {/* NO VARIANTS */}
         {!hasVariants && (
           <SingleProductView
             outfit={outfit}
@@ -610,9 +845,8 @@ const OutfitDetail = () => {
         {/* HAS VARIANTS */}
         {hasVariants && (
           <>
-            {/* ── DESKTOP ── */}
+            {/* DESKTOP */}
             <div className="hidden md:grid md:grid-cols-[1fr_2fr] gap-10">
-              {/* Main outfit image sticky left */}
               <div className="self-start lg:sticky lg:top-28 space-y-4">
                 <div className="relative aspect-[3/4] bg-secondary rounded-2xl overflow-hidden">
                   <img
@@ -620,7 +854,6 @@ const OutfitDetail = () => {
                     alt={outfit.name}
                     className="w-full h-full object-cover"
                   />
-
                   <button
                     onClick={handleToggleWishlist}
                     className="absolute top-3 right-3 p-2 bg-white/80 rounded-full"
@@ -633,26 +866,21 @@ const OutfitDetail = () => {
                 </div>
               </div>
 
-              {/* Right: header + variant grid */}
               <div className="space-y-5">
                 <div className="space-y-2">
                   <p className="text-xs uppercase text-muted-foreground tracking-widest">
                     {outfit.category} — {outfit.style || "N/A"}
                   </p>
-
                   <h1 className="text-3xl md:text-4xl font-light">
                     {outfit.name}
                   </h1>
-
                   <p className="text-muted-foreground text-sm max-w-xl">
                     {outfit.description}
                   </p>
-
                   <p className="text-xs text-muted-foreground">
-                    {variants.length} variant
-                    {variants.length !== 1 ? "s" : ""} available
+                    {variants.length} variant{variants.length !== 1 ? "s" : ""}{" "}
+                    available
                   </p>
-
                   <MainOutfitActions outfit={outfit} />
                 </div>
 
@@ -668,16 +896,14 @@ const OutfitDetail = () => {
               </div>
             </div>
 
-            {/* ── MOBILE ── */}
+            {/* MOBILE */}
             <div className="md:hidden space-y-3">
-              {/* Main outfit image */}
               <div className="relative aspect-[4/3] bg-secondary rounded-2xl overflow-hidden">
                 <img
                   src={outfit.image}
                   alt={outfit.name}
                   className="w-full h-full object-cover"
                 />
-
                 <button
                   onClick={handleToggleWishlist}
                   className="absolute top-3 right-3 p-2 bg-white/80 rounded-full"
@@ -689,29 +915,22 @@ const OutfitDetail = () => {
                 </button>
               </div>
 
-              {/* Header */}
               <div className="space-y-1">
                 <p className="text-xs uppercase text-muted-foreground tracking-widest">
                   {outfit.category} — {outfit.style || "N/A"}
                 </p>
-
-                <h1 className="text-2xl font-light">
-                  {outfit.name}
-                </h1>
-
+                <h1 className="text-2xl font-light">{outfit.name}</h1>
                 <p className="text-muted-foreground text-sm">
                   {outfit.description}
                 </p>
-
                 <p className="text-xs text-muted-foreground">
-                  {variants.length} variant
-                  {variants.length !== 1 ? "s" : ""} available
+                  {variants.length} variant{variants.length !== 1 ? "s" : ""}{" "}
+                  available
                 </p>
               </div>
 
               <MainOutfitActions outfit={outfit} />
 
-              {/* Variant list */}
               <div className="flex flex-col gap-3">
                 {variants.map((variant) => (
                   <VariantCardMobile

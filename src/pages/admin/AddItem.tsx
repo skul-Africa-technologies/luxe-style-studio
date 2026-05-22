@@ -20,12 +20,16 @@ const categories = ["Cap", "Shirt"];
 
 const AddItem = () => {
   const navigate = useNavigate();
-const [formData, setFormData] = useState({
-  name: "",
-  description: "",
-  price: "",
-  category: null,
-});
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: null as string | null,
+    size: "",
+    color: "",
+    stock: "",
+  });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -40,21 +44,41 @@ const [formData, setFormData] = useState({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
-const handleCategoryChange = (value: string) => {
-  const categoryValue = value === "none" ? null : value;
-  setFormData((prev) => ({ ...prev, category: categoryValue }));
-  if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
-};
+  const handleCategoryChange = (value: string) => {
+    const categoryValue = value === "none" ? null : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      category: categoryValue,
+    }));
+
+    if (errors.category) {
+      setErrors((prev) => ({
+        ...prev,
+        category: "",
+      }));
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
-    // Basic validation
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file");
       return;
@@ -63,27 +87,59 @@ const handleCategoryChange = (value: string) => {
     setImageFile(file);
 
     const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
+
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) newErrors.name = "Item name is required";
-    if (!formData.description.trim())
+    if (!formData.name.trim()) {
+      newErrors.name = "Item name is required";
+    }
+
+    if (!formData.description.trim()) {
       newErrors.description = "Description is required";
-    if (!formData.price || parseFloat(formData.price) <= 0)
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
       newErrors.price = "Price must be greater than 0";
-    if (!imageFile) newErrors.image = "Please upload an image";
+    }
+
+    if (!formData.size.trim()) {
+      newErrors.size = "Size is required";
+    }
+
+    if (!formData.color.trim()) {
+      newErrors.color = "Color is required";
+    }
+
+    if (
+      formData.stock === "" ||
+      Number(formData.stock) < 0
+    ) {
+      newErrors.stock = "Stock must be 0 or greater";
+    }
+
+    if (!imageFile) {
+      newErrors.image = "Please upload an image";
+    }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -95,15 +151,22 @@ const handleCategoryChange = (value: string) => {
     setIsSubmitting(true);
 
     try {
-      // Build FormData for multipart upload
       const formDataPayload = new FormData();
+
       formDataPayload.append("name", formData.name);
       formDataPayload.append("description", formData.description);
       formDataPayload.append("price", formData.price);
-      formDataPayload.append("category", formData.category);
+
+      if (formData.category) {
+        formDataPayload.append("category", formData.category);
+      }
+
+      formDataPayload.append("size", formData.size);
+      formDataPayload.append("color", formData.color);
+      formDataPayload.append("stock", formData.stock);
+
       formDataPayload.append("image", imageFile!);
 
-      // Send to backend - the backend handles Cloudinary upload
       await api.post("/api/items", formDataPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -111,12 +174,17 @@ const handleCategoryChange = (value: string) => {
       });
 
       setShowSuccess(true);
+
       setFormData({
         name: "",
         description: "",
         price: "",
-        category: "",
+        category: null,
+        size: "",
+        color: "",
+        stock: "",
       });
+
       removeImage();
 
       setTimeout(() => {
@@ -125,7 +193,10 @@ const handleCategoryChange = (value: string) => {
       }, 1500);
     } catch (err: any) {
       console.error("Failed to add item:", err);
-      const message = err.response?.data?.message || "Failed to add item";
+
+      const message =
+        err.response?.data?.message || "Failed to add item";
+
       alert(message);
     } finally {
       setIsSubmitting(false);
@@ -135,8 +206,13 @@ const handleCategoryChange = (value: string) => {
   return (
     <AdminLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="font-brand text-2xl mb-2">Add New Item</h1>
-        <p className="text-muted-foreground mb-6">Fill in item details below</p>
+        <h1 className="font-brand text-2xl mb-2">
+          Add New Item
+        </h1>
+
+        <p className="text-muted-foreground mb-6">
+          Fill in item details below
+        </p>
 
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -148,26 +224,34 @@ const handleCategoryChange = (value: string) => {
           {/* Name */}
           <div>
             <Label>Item Name</Label>
+
             <Input
               name="name"
               value={formData.name}
               onChange={handleInputChange}
             />
+
             {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name}</p>
+              <p className="text-red-500 text-sm">
+                {errors.name}
+              </p>
             )}
           </div>
 
           {/* Description */}
           <div>
             <Label>Description</Label>
+
             <Textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
             />
+
             {errors.description && (
-              <p className="text-red-500 text-sm">{errors.description}</p>
+              <p className="text-red-500 text-sm">
+                {errors.description}
+              </p>
             )}
           </div>
 
@@ -175,28 +259,37 @@ const handleCategoryChange = (value: string) => {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <Label>Price</Label>
+
               <Input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
               />
+
               {errors.price && (
-                <p className="text-red-500 text-sm">{errors.price}</p>
+                <p className="text-red-500 text-sm">
+                  {errors.price}
+                </p>
               )}
             </div>
 
             <div>
               <Label>Category</Label>
+
               <Select
-                value={formData.category}
+                value={formData.category || "none"}
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
+                  <SelectItem value="none">
+                    No category
+                  </SelectItem>
+
                   {categories.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -204,10 +297,70 @@ const handleCategoryChange = (value: string) => {
                   ))}
                 </SelectContent>
               </Select>
+
               {errors.category && (
-                <p className="text-red-500 text-sm">{errors.category}</p>
+                <p className="text-red-500 text-sm">
+                  {errors.category}
+                </p>
               )}
             </div>
+          </div>
+
+          {/* Size + Color */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Label>Size</Label>
+
+              <Input
+                name="size"
+                placeholder="e.g XL"
+                value={formData.size}
+                onChange={handleInputChange}
+              />
+
+              {errors.size && (
+                <p className="text-red-500 text-sm">
+                  {errors.size}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Color</Label>
+
+              <Input
+                name="color"
+                placeholder="e.g Black"
+                value={formData.color}
+                onChange={handleInputChange}
+              />
+
+              {errors.color && (
+                <p className="text-red-500 text-sm">
+                  {errors.color}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Stock */}
+          <div>
+            <Label>Stock Quantity</Label>
+
+            <Input
+              type="number"
+              min="0"
+              name="stock"
+              placeholder="0"
+              value={formData.stock}
+              onChange={handleInputChange}
+            />
+
+            {errors.stock && (
+              <p className="text-red-500 text-sm">
+                {errors.stock}
+              </p>
+            )}
           </div>
 
           {/* Image Upload */}
@@ -220,10 +373,15 @@ const handleCategoryChange = (value: string) => {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Click to upload</p>
+
+                <p className="text-sm text-muted-foreground">
+                  Click to upload
+                </p>
+
                 <p className="text-xs text-muted-foreground mt-1">
                   PNG, JPG, GIF up to 5MB
                 </p>
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -239,6 +397,7 @@ const handleCategoryChange = (value: string) => {
                   className="w-full h-48 object-cover rounded"
                   alt="Preview"
                 />
+
                 <Button
                   type="button"
                   size="icon"
@@ -252,7 +411,9 @@ const handleCategoryChange = (value: string) => {
             )}
 
             {errors.image && (
-              <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {errors.image}
+              </p>
             )}
           </div>
 
@@ -264,6 +425,7 @@ const handleCategoryChange = (value: string) => {
             >
               {isSubmitting ? "Adding..." : "Add Item"}
             </Button>
+
             <Button
               type="button"
               variant="outline"
