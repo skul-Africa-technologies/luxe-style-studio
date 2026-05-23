@@ -24,7 +24,7 @@ const OrderDetails = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!res.ok) {
@@ -49,9 +49,7 @@ const OrderDetails = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-6 text-gray-500">
-          Loading order...
-        </div>
+        <div className="p-6 text-gray-500">Loading order...</div>
       </AdminLayout>
     );
   }
@@ -60,9 +58,7 @@ const OrderDetails = () => {
   if (!order) {
     return (
       <AdminLayout>
-        <div className="p-6 text-red-500">
-          Order not found
-        </div>
+        <div className="p-6 text-red-500">Order not found</div>
       </AdminLayout>
     );
   }
@@ -70,12 +66,8 @@ const OrderDetails = () => {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-
         {/* BACK */}
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm underline"
-        >
+        <button onClick={() => navigate(-1)} className="text-sm underline">
           ← Back
         </button>
 
@@ -92,7 +84,6 @@ const OrderDetails = () => {
           </div>
 
           <div className="flex items-center gap-3">
-
             {/* STATUS */}
             <span
               className={`px-4 py-2 rounded-full text-sm font-medium
@@ -100,8 +91,8 @@ const OrderDetails = () => {
                   order.status === "delivered"
                     ? "bg-green-100 text-green-700"
                     : order.status === "pending"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-gray-100 text-gray-700"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-gray-100 text-gray-700"
                 }
               `}
             >
@@ -125,36 +116,26 @@ const OrderDetails = () => {
 
         {/* CUSTOMER INFO */}
         <div className="border rounded-xl p-5">
-          <h2 className="font-semibold text-lg mb-4">
-            Customer Information
-          </h2>
+          <h2 className="font-semibold text-lg mb-4">Customer Information</h2>
 
           <div className="space-y-2 text-sm">
             <p>
               <span className="font-medium">Name:</span>{" "}
-              {order.fullName ||
-                order.userId?.name ||
-                "N/A"}
+              {order.fullName || order.userId?.name || "N/A"}
             </p>
 
             <p>
               <span className="font-medium">Email:</span>{" "}
-              {order.email ||
-                order.userId?.email ||
-                "N/A"}
+              {order.email || order.userId?.email || "N/A"}
             </p>
 
             <p>
               <span className="font-medium">Phone:</span>{" "}
-              {order.phone ||
-                order.userId?.phone ||
-                "N/A"}
+              {order.phone || order.userId?.phone || "N/A"}
             </p>
 
             <p>
-              <span className="font-medium">
-                Delivery Address:
-              </span>{" "}
+              <span className="font-medium">Delivery Address:</span>{" "}
               {order.deliveryAddress ||
                 order.shippingAddress ||
                 order.userId?.address ||
@@ -163,8 +144,7 @@ const OrderDetails = () => {
 
             {order.notes && (
               <p>
-                <span className="font-medium">Notes:</span>{" "}
-                {order.notes}
+                <span className="font-medium">Notes:</span> {order.notes}
               </p>
             )}
           </div>
@@ -172,93 +152,60 @@ const OrderDetails = () => {
 
         {/* ORDER ITEMS */}
         <div className="border rounded-xl p-5">
-          <h2 className="font-semibold text-lg mb-5">
-            Order Items
-          </h2>
+          <h2 className="font-semibold text-lg mb-5">Order Items</h2>
 
           {order.items?.length > 0 ? (
             <div className="space-y-4">
-              {order.items.map(
-                (item: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex gap-4 border rounded-lg p-4"
-                  >
+              {order.items.map((item: any, index: number) => (
+                <div key={index} className="flex gap-4 border rounded-lg p-4">
+                  {/* IMAGE */}
+                  <img
+                    src={item.image || "/placeholder.svg"}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
 
-                     {/* IMAGE */}
-                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
-                       <img
-                         src={item.image || '/placeholder.svg'}
-                         alt={item.name}
-                         className="w-full h-full object-cover"
-                         onError={(e) => {
-                           e.target.src = '/placeholder.svg';
-                         }}
-                       />
-                     </div>
+                  {/* INFO */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">
+                      {item.name || item.slug || "Unknown Product"}
+                    </h3>
 
-                    {/* INFO */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">
-                        {item.name ||
-                          item.slug ||
-                          "Unknown Product"}
-                      </h3>
-
-                      {item.category && (
-                        <p className="text-sm text-gray-500">
-                          Category: {item.category}
-                        </p>
-                      )}
-
-                      <div className="mt-2 space-y-1 text-sm text-gray-600">
-
-                        <p>
-                          Quantity:{" "}
-                          {item.quantity || 1}
-                        </p>
-
-                        {item.size && (
-                          <p>
-                            Size: {item.size}
-                          </p>
-                        )}
-
-                        {item.color && (
-                          <p>
-                            Color: {item.color}
-                          </p>
-                        )}
-
-                        {item.slug && (
-                          <p>
-                            Slug: {item.slug}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* PRICE */}
-                    <div className="text-right">
-                      <p className="font-semibold text-lg">
-                        ₦
-                        {(
-                          (item.price || 0) *
-                          (item.quantity || 1)
-                        ).toLocaleString()}
-                      </p>
-
+                    {item.category && (
                       <p className="text-sm text-gray-500">
-                        ₦
-                        {(
-                          item.price || 0
-                        ).toLocaleString()}{" "}
-                        each
+                        Category: {item.category}
                       </p>
+                    )}
+
+                    <div className="mt-2 space-y-1 text-sm text-gray-600">
+                      <p>Quantity: {item.quantity || 1}</p>
+
+                      {item.size && <p>Size: {item.size}</p>}
+
+                      {item.color && <p>Color: {item.color}</p>}
+
+                      {item.slug && <p>Slug: {item.slug}</p>}
                     </div>
                   </div>
-                )
-              )}
+
+                  {/* PRICE */}
+                  <div className="text-right">
+                    <p className="font-semibold text-lg">
+                      ₦
+                      {(
+                        (item.price || 0) * (item.quantity || 1)
+                      ).toLocaleString()}
+                    </p>
+
+                    <p className="text-sm text-gray-500">
+                      ₦{(item.price || 0).toLocaleString()} each
+                    </p>
+                  </div>
+                </div>
+              ))}
 
               {/* TOTAL */}
               <div className="border-t pt-4 flex justify-between items-center text-lg font-bold">
@@ -266,20 +213,14 @@ const OrderDetails = () => {
 
                 <span>
                   {order.currency || "₦"}
-                  {Number(
-                    order.total || 0
-                  ).toLocaleString()}
+                  {Number(order.total || 0).toLocaleString()}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">
-              No items found
-            </p>
+            <p className="text-gray-500 text-sm">No items found</p>
           )}
         </div>
-
-    
       </div>
     </AdminLayout>
   );

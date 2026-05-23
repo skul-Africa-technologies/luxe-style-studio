@@ -10,6 +10,7 @@ export interface Outfit {
   description: string;
   fabric?: string;
   style?: string;
+  size?: string;
   category: string;
   color?: string;
   stock?: number;
@@ -24,6 +25,7 @@ export interface ApiItem {
   category: string;
   fabric?: string;
   style?: string;
+  size?: string;
   color?: string;
   stock?: number;
 }
@@ -78,6 +80,7 @@ export const fetchOutfits = async (
     description: item.description,
     fabric: item.fabric,
     style: item.style,
+    size: item.size,
     category: item.category,
     color: item.color,
     stock: item.stock !== undefined ? Number(item.stock) : undefined,
@@ -88,7 +91,7 @@ export const fetchOutfits = async (
 
 export const fetchOutfitById = async (
   id: string
-): Promise<Outfit & { variants: ApiItemWithVariants["variants"] } | null> => {
+): Promise<(Outfit & { variants: ApiItemWithVariants["variants"] }) | null> => {
   try {
     const res = await api.get<ApiItemWithVariants>(`/api/items/${id}`);
 
@@ -104,6 +107,7 @@ export const fetchOutfitById = async (
       description: item.description,
       fabric: item.fabric ?? "",
       style: item.style ?? "",
+      size: item.size,
       category: item.category,
       color: item.color,
       stock: item.stock !== undefined ? Number(item.stock) : undefined,
