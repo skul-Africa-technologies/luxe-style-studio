@@ -58,25 +58,10 @@ interface DashboardData {
   totalOrders: number;
   totalItems: number;
   recentOrders: RecentOrder[];
-
   analytics: {
-    orders: {
-      today: number;
-      yesterday: number;
-      trend: number;
-    };
-
-    sales: {
-      today: number;
-      yesterday: number;
-      trend: number;
-    };
-
-    weeklyOrders: {
-      thisWeek: number;
-      lastWeek: number;
-      trend: number;
-    };
+    orders: { today: number; yesterday: number; trend: number };
+    sales: { today: number; yesterday: number; trend: number };
+    weeklyOrders: { thisWeek: number; lastWeek: number; trend: number };
   };
 }
 
@@ -99,8 +84,8 @@ const Dashboard = () => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
-  // Prevent unnecessary re-render
   const lastDataRef = useRef<string>("");
 
   /* ---------------- FETCH DASHBOARD ---------------- */
@@ -113,19 +98,21 @@ const Dashboard = () => {
       return;
     }
 
-     const fetchDashboard = async () => {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/dashboard`, {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/admin/dashboard`,
+          {
             headers: {
-             Authorization: `Bearer ${token}`,
-           },
-         });
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch dashboard data");
 
         const json = await res.json();
 
-        // Only update state if response changed
         const newDataString = JSON.stringify(json);
 
         if (newDataString !== lastDataRef.current) {
@@ -142,10 +129,8 @@ const Dashboard = () => {
       }
     };
 
-    // Fetch immediately
     fetchDashboard();
 
-    // Auto refresh every 30 seconds
     const interval = setInterval(fetchDashboard, 30000);
 
     return () => clearInterval(interval);
@@ -158,12 +143,72 @@ const Dashboard = () => {
     navigate("/admin/login", { replace: true });
   };
 
+  /* ---------------- CLEAR DASHBOARD ---------------- */
+
+  const handleClearDashboard = async () => {
+    const token = localStorage.getItem("admin-token");
+    if (!token) return;
+
+    const confirmClear = window.confirm(
+      "⚠️ Are you sure you want to clear ALL dashboard data?"
+    );
+
+    if (!confirmClear) return;
+
+    try {
+      setClearing(true);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/admin/dashboard/clear`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to clear dashboard");
+
+      // reset UI instantly
+      const emptyState: DashboardData = {
+        totalSales: 0,
+        totalUsers: 0,
+        totalOrders: 0,
+        totalItems: 0,
+        recentOrders: [],
+        analytics: {
+          orders: { today: 0, yesterday: 0, trend: 0 },
+          sales: { today: 0, yesterday: 0, trend: 0 },
+          weeklyOrders: { thisWeek: 0, lastWeek: 0, trend: 0 },
+        },
+      };
+
+      setData(emptyState);
+      lastDataRef.current = "";
+    } catch (err) {
+      console.error("Clear dashboard error:", err);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   /* ---------------- UI ---------------- */
 
   return (
     <AdminLayout>
-      {/* Logout */}
-      <div className="flex justify-end mb-4">
+      {/* TOP ACTIONS */}
+      <div className="flex justify-end mb-4 gap-2">
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={clearing}
+          onClick={handleClearDashboard}
+          className="flex items-center gap-2 font-body text-xs uppercase tracking-[0.1em]"
+        >
+          {clearing ? "Clearing..." : "Clear Dashboard"}
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
@@ -175,16 +220,15 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Loading */}
+      {/* LOADING */}
       {loading ? (
         <p className="text-center font-body text-sm text-muted-foreground">
           Loading dashboard...
         </p>
       ) : (
         <div className="space-y-6">
-          {/* ---------------- STATS GRID ---------------- */}
+          {/* STATS */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {/* Sales Today */}
             <AnalyticsCard
               title="Sales Today"
               value={`₦${data.analytics.sales.today.toLocaleString()}`}
@@ -193,7 +237,6 @@ const Dashboard = () => {
               trendUp={data.analytics.sales.trend >= 0}
             />
 
-            {/* Total Users */}
             <AnalyticsCard
               title="Total Users"
               value={data.totalUsers.toLocaleString()}
@@ -202,7 +245,6 @@ const Dashboard = () => {
               trendUp
             />
 
-            {/* Orders Today */}
             <AnalyticsCard
               title="Orders Today"
               value={data.analytics.orders.today.toLocaleString()}
@@ -211,7 +253,6 @@ const Dashboard = () => {
               trendUp={data.analytics.orders.trend >= 0}
             />
 
-            {/* Weekly Orders */}
             <AnalyticsCard
               title="Orders This Week"
               value={data.analytics.weeklyOrders.thisWeek.toLocaleString()}
@@ -221,7 +262,7 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* ---------------- RECENT ORDERS ---------------- */}
+          {/* RECENT ORDERS */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -260,39 +301,24 @@ const Dashboard = () => {
                       data.recentOrders.map((order) => (
                         <TableRow key={order._id}>
                           <TableCell>{order._id.slice(0, 8)}...</TableCell>
-
                           <TableCell>
                             {order.fullName || order.email || "Unknown"}
                           </TableCell>
-
                           <TableCell>{order.email || "-"}</TableCell>
-
                           <TableCell>{order.phone || "-"}</TableCell>
-
                           <TableCell>
                             {order.items?.length || 0} item(s)
                           </TableCell>
-
                           <TableCell className="max-w-xs">
-                            <div className="truncate" title={order.deliveryAddress}>
-                              {order.deliveryAddress || order.shippingAddress || "-"}
+                            <div className="truncate">
+                              {order.deliveryAddress ||
+                                order.shippingAddress ||
+                                "-"}
                             </div>
-                            {order.googleMapsLink && (
-                              <a
-                                href={order.googleMapsLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-500 hover:underline"
-                              >
-                                View Map
-                              </a>
-                            )}
                           </TableCell>
-
-                           <TableCell>
-                             ₦{order.total.toLocaleString()}
-                           </TableCell>
-
+                          <TableCell>
+                            ₦{order.total.toLocaleString()}
+                          </TableCell>
                           <TableCell className="capitalize">
                             {order.status}
                           </TableCell>
