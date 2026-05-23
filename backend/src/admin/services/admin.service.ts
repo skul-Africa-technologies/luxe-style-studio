@@ -151,4 +151,25 @@ export class AdminService {
       { $limit: 30 },
     ]);
   }
+
+  // ✅ Clear all dashboard data (for resetting)
+  async clearAllDashboardData() {
+    const [ordersDeleted, usersDeleted, itemsDeleted, paymentsDeleted] =
+      await Promise.all([
+        this.ordersService['orderModel'].deleteMany({}),
+        this.usersService['userModel'].deleteMany({}),
+        this.itemsService['itemModel'].deleteMany({}),
+        this.paymentsService['paymentModel'].deleteMany({}),
+      ]);
+
+    return {
+      message: 'All dashboard data cleared successfully',
+      deleted: {
+        orders: ordersDeleted.deletedCount,
+        users: usersDeleted.deletedCount,
+        items: itemsDeleted.deletedCount,
+        payments: paymentsDeleted.deletedCount,
+      },
+    };
+  }
 }

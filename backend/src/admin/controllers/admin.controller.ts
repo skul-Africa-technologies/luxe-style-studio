@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from '../services/admin.service';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
@@ -21,5 +21,12 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Dashboard data with total sales, users, orders, and items' })
   async getDashboard() {
     return this.adminService.getDashboardData();
+  }
+
+  @Delete('dashboard/clear')
+  @ApiOperation({ summary: 'Clear all dashboard data', description: 'Deletes all orders, users, items, and payments' })
+  @ApiResponse({ status: 200, description: 'All dashboard data cleared successfully' })
+  async clearDashboardData() {
+    return this.adminService.clearAllDashboardData();
   }
 }
