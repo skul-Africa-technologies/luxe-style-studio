@@ -112,28 +112,16 @@ export class AdminService {
 
   /* ---------------- CLEAR EVERYTHING ---------------- */
 
-  async clearAllDashboardData() {
-    const results = await Promise.all([
-      this.ordersService['orderModel'].deleteMany({}),
-      this.usersService['userModel'].deleteMany({}),
-      this.itemsService['itemModel'].deleteMany({}),
-      this.paymentsService['paymentModel'].deleteMany({}),
+async clearAllDashboardData() {
+  const result = await this.ordersService['orderModel']
+    .db.collection('activities')
+    .deleteMany({});
 
-      // ✅ NEW: dashboard activity logs cleanup
-      this.ordersService['orderModel']
-        .db.collection('activities')
-        .deleteMany({}),
-    ]);
-
-    return {
-      message: 'Dashboard fully cleared (including activities)',
-      deleted: {
-        orders: results[0].deletedCount,
-        users: results[1].deletedCount,
-        items: results[2].deletedCount,
-        payments: results[3].deletedCount,
-        activities: results[4].deletedCount,
-      },
-    };
-  }
+  return {
+    message: 'Dashboard activity cleared',
+    deleted: {
+      activities: result.deletedCount,
+    },
+  };
+}
 }
