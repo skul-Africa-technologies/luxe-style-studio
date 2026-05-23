@@ -1,37 +1,35 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { OrdersService } from '../services/orders.service';
-import { CreateOrderDto, UpdateOrderStatusDto } from '../dto';
+import { UpdateOrderStatusDto } from '../dto';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
-import { Roles, Public, CurrentUser } from '../../common/decorators';
-import { JwtPayload } from '../../common/interfaces';
+import { Roles } from '../../common/decorators';
 
-/**
- * OrdersController - Handles order management endpoints
- */
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Public()
-  @Post()
-  @ApiOperation({ summary: 'Create order', description: 'Create a new order (manual payment)' })
-  @ApiResponse({ status: 201, description: 'Order created successfully' })
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
-  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Get()
-  @ApiOperation({ summary: 'Get all orders', description: 'Retrieve paginated list of orders' })
+  @ApiOperation({ summary: 'Get all orders', description: 'Retrieve paginated list of paid orders (Admin only)' })
   @ApiBearerAuth()
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false })
   @ApiResponse({ status: 200, description: 'List of orders' })
-  async findAll(@Query('status') status?: string) {
-    const filterStatus = status ?? 'paid';
-    return this.ordersService.findAll(1, 10, filterStatus);
+  async findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('status') status?: string,
+  ) {
+    return this.ordersService.findAll(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 10,
+      status,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

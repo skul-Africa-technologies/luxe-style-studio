@@ -46,16 +46,18 @@ export class AdminService {
       ]);
 
     const ordersToday = await this.ordersService['orderModel'].countDocuments({
+      isPaid: true,
       createdAt: { $gte: startOfToday },
     });
 
     const ordersYesterday =
       await this.ordersService['orderModel'].countDocuments({
+        isPaid: true,
         createdAt: { $gte: startOfYesterday, $lt: startOfToday },
       });
 
     const salesTodayAgg = await this.ordersService['orderModel'].aggregate([
-      { $match: { createdAt: { $gte: startOfToday } } },
+      { $match: { isPaid: true, createdAt: { $gte: startOfToday } } },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
 
@@ -63,6 +65,7 @@ export class AdminService {
       await this.ordersService['orderModel'].aggregate([
         {
           $match: {
+            isPaid: true,
             createdAt: { $gte: startOfYesterday, $lt: startOfToday },
           },
         },
@@ -74,11 +77,13 @@ export class AdminService {
 
     const ordersThisWeek =
       await this.ordersService['orderModel'].countDocuments({
+        isPaid: true,
         createdAt: { $gte: startOfWeek },
       });
 
     const ordersLastWeek =
       await this.ordersService['orderModel'].countDocuments({
+        isPaid: true,
         createdAt: { $gte: startOfLastWeek, $lt: startOfWeek },
       });
 
@@ -110,18 +115,18 @@ export class AdminService {
     };
   }
 
-  /* ---------------- CLEAR EVERYTHING ---------------- */
+  /* ---------------- CLEAR ACTIVITY ---------------- */
 
-async clearAllDashboardData() {
-  const result = await this.ordersService['orderModel']
-    .db.collection('activities')
-    .deleteMany({});
+  async clearAllDashboardData() {
+    const result = await this.ordersService['orderModel']
+      .db.collection('activities')
+      .deleteMany({});
 
-  return {
-    message: 'Dashboard activity cleared',
-    deleted: {
-      activities: result.deletedCount,
-    },
-  };
-}
+    return {
+      message: 'Dashboard activity cleared',
+      deleted: {
+        activities: result.deletedCount,
+      },
+    };
+  }
 }

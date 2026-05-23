@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Order } from '../entities/order.entity';
-import { CreateOrderDto, UpdateOrderStatusDto } from '../dto';
-import { UsersService } from '../../users/services/users.service';
-import { ItemsService } from '../../items/services/items.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model, Types } from "mongoose";
+import { Order } from "../entities/order.entity";
+import { CreateOrderDto, UpdateOrderStatusDto } from "../dto";
+import { UsersService } from "../../users/services/users.service";
+import { ItemsService } from "../../items/services/items.service";
 
 /**
  * OrdersService - Handles order-related business logic
@@ -27,7 +27,7 @@ export class OrdersService {
     if (createOrderDto.email) {
       const { user } = await this.usersService.findOrCreateFromCheckout({
         email: createOrderDto.email,
-        name: createOrderDto.fullName || '',
+        name: createOrderDto.fullName || "",
         phone: createOrderDto.phone,
         address:
           createOrderDto.shippingAddress || createOrderDto.deliveryAddress,
@@ -38,7 +38,6 @@ export class OrdersService {
 
     // Build safe product snapshot for each item
     const processedItems = await Promise.all(
-      
       createOrderDto.items.map(async (item) => {
         let product = null;
 
@@ -51,9 +50,9 @@ export class OrdersService {
         return {
           itemId: new Types.ObjectId(item.itemId),
 
-          name: product?.name || item.name || 'Unknown Product',
+          name: product?.name || item.name || "Unknown Product",
 
-         image: product?.imageUrl || null,
+          image: product?.imageUrl || null,
 
           price: product?.price || item.price || 0,
 
@@ -73,7 +72,7 @@ export class OrdersService {
     // Create order
     const order = new this.orderModel({
       ...createOrderDto,
-      currency: createOrderDto.currency || 'NGN',
+      currency: createOrderDto.currency || "NGN",
       userId,
       fullName: createOrderDto.fullName,
       email: createOrderDto.email,
@@ -98,7 +97,7 @@ export class OrdersService {
    * GET ALL ORDERS (ADMIN)
    */
   async findAll(page = 1, limit = 10, status?: string) {
-    const query: any = {};
+    const query: any = { isPaid: true }; // add this
     if (status) query.status = status;
 
     const skip = (page - 1) * limit;
@@ -106,10 +105,7 @@ export class OrdersService {
     const [data, total] = await Promise.all([
       this.orderModel
         .find(query)
-        .populate(
-          'userId',
-          'name email phone address city country postalCode',
-        )
+        .populate("userId", "name email phone address city country postalCode")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 }),
@@ -132,10 +128,7 @@ export class OrdersService {
   async findOne(id: string): Promise<Order> {
     const order = await this.orderModel
       .findById(id)
-      .populate(
-        'userId',
-        'name email phone address city country postalCode',
-      );
+      .populate("userId", "name email phone address city country postalCode");
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found`);
@@ -181,7 +174,7 @@ export class OrdersService {
    * ORDER COUNT
    */
   async getOrderCount(): Promise<number> {
-    return this.orderModel.countDocuments();
+    return this.orderModel.countDocuments({ isPaid: true });
   }
 
   /**
@@ -191,13 +184,13 @@ export class OrdersService {
     const result = await this.orderModel.aggregate([
       {
         $match: {
-          status: { $in: ['paid', 'shipped', 'delivered'] },
+          status: { $in: ["paid", "shipped", "delivered"] },
         },
       },
       {
         $group: {
           _id: null,
-          total: { $sum: '$total' },
+          total: { $sum: "$total" },
         },
       },
     ]);
@@ -215,12 +208,18 @@ export class OrdersService {
   }
 
   async markAsPaid(orderId: string) {
-  return this.orderModel.findByIdAndUpdate(orderId, {
-    isPaid: true,
-    paidAt: new Date(),
-    status: 'paid',
-  });
-}
+    return this.orderModel.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          isPaid: true,
+          paidAt: new Date(),
+          status: "paid",
+        },
+      },
+      { new: true },
+    );
+  }
 
   async getTotalRevenue(): Promise<number> {
     const result = await this.orderModel.aggregate([
@@ -230,7 +229,7 @@ export class OrdersService {
       {
         $group: {
           _id: null,
-          total: { $sum: '$total' },
+          total: { $sum: "$total" },
         },
       },
     ]);
@@ -242,9 +241,13 @@ export class OrdersService {
    * FIND ORDER BY PAYSTACK REFERENCE
    */
   async findByPaystackReference(reference: string): Promise<Order> {
-    const order = await this.orderModel.findOne({ paystackReference: reference });
+    const order = await this.orderModel.findOne({
+      paystackReference: reference,
+    });
     if (!order) {
-      throw new NotFoundException(`Order with Paystack reference ${reference} not found`);
+      throw new NotFoundException(
+        `Order with Paystack reference ${reference} not found`,
+      );
     }
     return order;
   }
