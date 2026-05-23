@@ -61,90 +61,7 @@ const StockText = ({ stock }: { stock?: number }) => {
 /* Color Notice Modal                      */
 /* ─────────────────────────────────────── */
 
-const ColorNoticeModal = ({
-  show,
-  onClose,
-}: {
-  show: boolean;
-  onClose: () => void;
-}) => {
-  useEffect(() => {
-    if (!show) return;
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKey);
-
-    return () => window.removeEventListener("keydown", onKey);
-  }, [show, onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = show ? "hidden" : "";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [show]);
-
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          key="backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-4"
-          onClick={onClose}
-        >
-          <motion.div
-            key="panel"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl relative"
-          >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
-            >
-              <X size={18} className="text-neutral-500" />
-            </button>
-
-            <div className="mx-auto mb-5 w-10 h-1 rounded-full bg-neutral-200 sm:hidden" />
-
-            <div className="space-y-5 text-center">
-              <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center mx-auto text-xl">
-                🎨
-              </div>
-
-              <h2 className="text-lg sm:text-xl font-semibold">
-                Color Selection Notice
-              </h2>
-
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Please note that any selected color may be delivered either as
-                the main product displayed or from the available product
-                variants.
-              </p>
-
-              <button
-                onClick={onClose}
-                className="w-full h-12 rounded-2xl bg-black text-white uppercase text-xs tracking-widest hover:bg-neutral-800 active:scale-[0.98] transition-all"
-              >
-                I Understand
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 /* ─────────────────────────────────────────────────────────────────
    MainOutfitActions
@@ -938,10 +855,7 @@ const OutfitDetail = () => {
 
       <MobileBottomNav />
 
-      <ColorNoticeModal
-        show={showColorNotice}
-        onClose={() => setShowColorNotice(false)}
-      />
+   
 
       <main className="pt-24 max-w-7xl mx-auto px-4 md:px-12 pb-24">
         <motion.button
