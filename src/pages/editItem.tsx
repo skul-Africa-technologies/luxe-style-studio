@@ -71,19 +71,26 @@ const EditItem = () => {
 
         const data = await res.json();
 
+        // Safely coerce every field to a clean string so inputs never show "true"/"false"
+        const safeStr = (val: unknown): string => {
+          if (val === null || val === undefined) return "";
+          if (typeof val === "boolean") return "";
+          return String(val);
+        };
+
         setFormData({
-          name: data.name ?? "",
-          description: data.description ?? "",
-          price: String(data.price ?? ""),
-          category: data.category ?? "",
-          imageUrl: data.imageUrl ?? "",
-          color: data.color ?? "",
-          size: data.size ?? "",
-          stock: String(data.stock ?? ""),
+          name: safeStr(data.name),
+          description: safeStr(data.description),
+          price: safeStr(data.price),
+          category: safeStr(data.category),
+          imageUrl: safeStr(data.imageUrl),
+          color: safeStr(data.color),
+          size: safeStr(data.size),
+          stock: safeStr(data.stock),
         });
 
         setVariants(data.variants ?? []);
-        setImagePreview(data.imageUrl ?? null);
+        setImagePreview(safeStr(data.imageUrl) || null);
       } catch (err) {
         console.error(err);
         alert("Failed to load item");
@@ -133,7 +140,6 @@ const EditItem = () => {
     try {
       let finalImageUrl = formData.imageUrl;
 
-      /* ✅ FIXED IMAGE UPLOAD ENDPOINT */
       if (imageFile) {
         const uploadData = new FormData();
         uploadData.append("image", imageFile);
@@ -147,15 +153,12 @@ const EditItem = () => {
         finalImageUrl = uploadRes.data.url;
       }
 
-      /* ✅ ONLY SEND BACKEND-VALID FIELDS */
       await api.patch(`/api/items/${id}`, {
         name: formData.name,
         description: formData.description,
         price: Number(formData.price),
         category: formData.category || null,
         imageUrl: finalImageUrl,
-
-        /* these are allowed in DTO */
         color: formData.color || null,
         size: formData.size || null,
         stock: Number(formData.stock || 0),
@@ -193,41 +196,118 @@ const EditItem = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          <Input name="name" value={formData.name} onChange={handleInputChange} placeholder="Name" />
+          <div className="space-y-1">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="Item name"
+            />
+          </div>
 
-          <Textarea name="description" value={formData.description} onChange={handleInputChange} />
+          <div className="space-y-1">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Item description"
+            />
+          </div>
 
-          <Input type="number" name="price" value={formData.price} onChange={handleInputChange} />
+          <div className="space-y-1">
+            <Label htmlFor="price">Price (₦)</Label>
+            <Input
+              id="price"
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleInputChange}
+              placeholder="e.g. 15000"
+            />
+          </div>
 
-          <Select value={formData.category} onValueChange={handleCategoryChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <Label>Category</Label>
+            <Select value={formData.category} onValueChange={handleCategoryChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Input name="color" value={formData.color} onChange={handleInputChange} placeholder="Color" />
-            <Input name="size" value={formData.size} onChange={handleInputChange} placeholder="Size" />
-            <Input type="number" name="stock" value={formData.stock} onChange={handleInputChange} placeholder="Stock" />
+            <div className="space-y-1">
+              <Label htmlFor="color">Color <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                id="color"
+                name="color"
+                value={formData.color}
+                onChange={handleInputChange}
+                placeholder="e.g. Black"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="size">Size <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                id="size"
+                name="size"
+                value={formData.size}
+                onChange={handleInputChange}
+                placeholder="e.g. XL"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="stock">Stock</Label>
+              <Input
+                id="stock"
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleInputChange}
+                placeholder="e.g. 10"
+              />
+            </div>
           </div>
 
           {/* IMAGE */}
-          <div onClick={() => fileInputRef.current?.click()} className="border p-4 cursor-pointer">
-            <Upload />
-            <input hidden ref={fileInputRef} type="file" onChange={handleImageChange} />
+          <div className="space-y-2">
+            <Label>Product Image</Label>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-foreground transition-colors"
+            >
+              <Upload className="mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Click to upload image</p>
+              <input hidden ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} />
+            </div>
           </div>
 
           {imagePreview && (
-            <img src={imagePreview} className="w-full h-48 object-cover" />
+            <div className="relative w-full max-w-xs">
+              <img src={imagePreview} className="w-full h-48 object-cover rounded-xl" />
+              <button
+                type="button"
+                onClick={() => { setImagePreview(null); setImageFile(null); }}
+                className="absolute top-2 right-2 p-1 bg-white rounded-full shadow"
+              >
+                <X size={14} />
+              </button>
+            </div>
           )}
 
-          <Button disabled={isSubmitting}>
+          <Button disabled={isSubmitting} type="submit" className="w-full">
             {isSubmitting ? "Updating..." : "Update Item"}
           </Button>
         </form>

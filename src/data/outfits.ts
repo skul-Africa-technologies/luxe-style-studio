@@ -11,6 +11,8 @@ export interface Outfit {
   fabric?: string;
   style?: string;
   category: string;
+  color?: string;
+  stock?: number;
 }
 
 export interface ApiItem {
@@ -22,6 +24,8 @@ export interface ApiItem {
   category: string;
   fabric?: string;
   style?: string;
+  color?: string;
+  stock?: number;
 }
 
 export interface ApiItemWithVariants extends ApiItem {
@@ -75,6 +79,8 @@ export const fetchOutfits = async (
     fabric: item.fabric,
     style: item.style,
     category: item.category,
+    color: item.color,
+    stock: item.stock !== undefined ? Number(item.stock) : undefined,
   }));
 };
 
@@ -84,7 +90,6 @@ export const fetchOutfitById = async (
   id: string
 ): Promise<Outfit & { variants: ApiItemWithVariants["variants"] } | null> => {
   try {
-    // Use the combined endpoint that returns item with variants
     const res = await api.get<ApiItemWithVariants>(`/api/items/${id}`);
 
     const item: ApiItemWithVariants = res.data;
@@ -100,6 +105,8 @@ export const fetchOutfitById = async (
       fabric: item.fabric ?? "",
       style: item.style ?? "",
       category: item.category,
+      color: item.color,
+      stock: item.stock !== undefined ? Number(item.stock) : undefined,
       variants: Array.isArray(item.variants) ? item.variants : [],
     };
   } catch (err) {
