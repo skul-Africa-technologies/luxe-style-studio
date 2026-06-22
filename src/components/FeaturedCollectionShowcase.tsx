@@ -97,7 +97,7 @@ const FeaturedCollectionShowcase = () => {
 
   if (loading) {
     return (
-      <section className="pt-24 pb-12 md:py-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
+      <section className="pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
         <div className="relative h-[160px] sm:h-[220px] md:h-[500px] bg-secondary/30 animate-pulse rounded-[2rem] overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent animate-pulse" />
         </div>
@@ -107,7 +107,7 @@ const FeaturedCollectionShowcase = () => {
 
   if (error) {
     return (
-      <section className="pt-24 pb-12 md:py-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
+      <section className="pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
         <p className="text-center text-red-500">{error}</p>
       </section>
     );
@@ -115,7 +115,7 @@ const FeaturedCollectionShowcase = () => {
 
   if (slideshows.length === 0) {
     return (
-      <section className="pt-24 pb-12 md:py-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
+      <section className="pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
         <p className="text-center text-muted-foreground">
           No slideshow images available yet.
         </p>
@@ -128,7 +128,7 @@ const FeaturedCollectionShowcase = () => {
   return (
     <section
       id="collection"
-      className="pt-24 pb-12 md:py-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
+      className="pt-24 pb-12 md:pt-44 md:pb-24 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

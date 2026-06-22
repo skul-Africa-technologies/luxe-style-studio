@@ -30,6 +30,7 @@ import SlideshowManagement from "./pages/admin/Slideshow";
 import AdminVariantManager from "./pages/admin/AdminVariantManager";
 import OrderDetails from "./pages/admin/OrderDetails";
 import EditSlideshow from "./pages/admin/Editslideshow";
+import UpdateAnnouncement from "./components/ui/ Updateannouncement";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Analytics />
+             <UpdateAnnouncement />
             <BrowserRouter>
               <Routes>
                 {/* ================= USER ROUTES ================= */}

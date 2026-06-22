@@ -58,10 +58,116 @@ const StockText = ({ stock }: { stock?: number }) => {
 };
 
 /* ─────────────────────────────────────── */
-/* Color Notice Modal                      */
+/* Glass Image Modal (NEW)                 */
 /* ─────────────────────────────────────── */
 
+interface ModalImageData {
+  image: string;
+  title: string;
+  subtitle?: string;
+}
 
+const ImageModal = ({
+  data,
+  onClose,
+}: {
+  data: ModalImageData | null;
+  onClose: () => void;
+}) => {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      {data && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 30%, rgba(0,0,0,0.55), rgba(0,0,0,0.8))",
+            backdropFilter: "blur(20px) saturate(140%)",
+            WebkitBackdropFilter: "blur(20px) saturate(140%)",
+          }}
+        >
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ type: "spring", damping: 24, stiffness: 280 }}
+            className="relative w-full max-w-3xl max-h-[92vh] rounded-3xl overflow-hidden flex flex-col"
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04))",
+              border: "1px solid rgba(255,255,255,0.25)",
+              backdropFilter: "blur(30px) saturate(160%)",
+              WebkitBackdropFilter: "blur(30px) saturate(160%)",
+              boxShadow:
+                "0 8px 40px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.3)",
+            }}
+          >
+            {/* Close button — glassy, high-contrast so it's always visible */}
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: "rgba(20,20,20,0.55)",
+                border: "1px solid rgba(255,255,255,0.4)",
+                backdropFilter: "blur(14px) saturate(160%)",
+                WebkitBackdropFilter: "blur(14px) saturate(160%)",
+                boxShadow:
+                  "0 2px 12px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.25)",
+              }}
+            >
+              <X size={20} color="#ffffff" strokeWidth={2.5} />
+            </button>
+
+            <div className="flex-1 min-h-0 flex items-center justify-center p-4 md:p-8">
+              {data && (
+                <img
+                  src={data.image}
+                  alt={data.title}
+                  className="max-w-full max-h-[78vh] w-auto h-auto object-contain rounded-xl"
+                />
+              )}
+            </div>
+
+            {(data?.title || data?.subtitle) && (
+              <div
+                className="px-4 md:px-5 py-3 md:py-4 flex flex-wrap items-center justify-between gap-2 shrink-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+                  borderTop: "1px solid rgba(255,255,255,0.15)",
+                }}
+              >
+                <p className="text-white text-sm uppercase tracking-widest font-medium">
+                  {data?.title}
+                </p>
+                {data?.subtitle && (
+                  <p className="text-white/70 text-xs uppercase tracking-widest">
+                    {data.subtitle}
+                  </p>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 /* ─────────────────────────────────────────────────────────────────
    MainOutfitActions
@@ -205,12 +311,12 @@ const MainOutfitActions = ({
         </button>
 
         {!outOfStock && (
-<button
-  onClick={handleWhatsappOrder}
-  className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
->
-  <FaWhatsapp size={18} />
-</button>
+          <button
+            onClick={handleWhatsappOrder}
+            className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
+          >
+            <FaWhatsapp size={18} />
+          </button>
         )}
       </div>
     </div>
@@ -225,10 +331,12 @@ const SingleProductView = ({
   outfit,
   isLoved,
   onToggleWishlist,
+  onImageClick,
 }: {
   outfit: OutfitWithVariants;
   isLoved: boolean;
   onToggleWishlist: () => void;
+  onImageClick: () => void;
 }) => {
   const { addItem } = useCart();
 
@@ -293,7 +401,8 @@ const SingleProductView = ({
         <img
           src={outfit.image}
           alt={outfit.name}
-          className="w-full h-full object-cover"
+          onClick={onImageClick}
+          className="w-full h-full object-cover cursor-pointer"
         />
 
         <button
@@ -385,12 +494,12 @@ const SingleProductView = ({
           </button>
 
           {!outOfStock && (
-<button
-  onClick={handleWhatsappOrder}
-  className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
->
-  <FaWhatsapp size={18} />
-</button>
+            <button
+              onClick={handleWhatsappOrder}
+              className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
+            >
+              <FaWhatsapp size={18} />
+            </button>
           )}
         </div>
       </div>
@@ -405,9 +514,11 @@ const SingleProductView = ({
 const VariantCardDesktop = ({
   variant,
   outfit,
+  onImageClick,
 }: {
   variant: Variant;
   outfit: OutfitWithVariants;
+  onImageClick: () => void;
 }) => {
   const { addItem } = useCart();
 
@@ -489,7 +600,8 @@ const VariantCardDesktop = ({
         <img
           src={variantImage}
           alt={variant.color || outfit.name}
-          className="w-full h-full object-cover"
+          onClick={onImageClick}
+          className="w-full h-full object-cover cursor-pointer"
         />
 
         {outOfStock && (
@@ -567,12 +679,12 @@ const VariantCardDesktop = ({
         </button>
 
         {!outOfStock && (
-<button
-  onClick={handleWhatsappOrder}
-  className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
->
-  <FaWhatsapp size={18} />
-</button>
+          <button
+            onClick={handleWhatsappOrder}
+            className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
+          >
+            <FaWhatsapp size={18} />
+          </button>
         )}
       </div>
     </motion.div>
@@ -586,9 +698,11 @@ const VariantCardDesktop = ({
 const VariantCardMobile = ({
   variant,
   outfit,
+  onImageClick,
 }: {
   variant: Variant;
   outfit: OutfitWithVariants;
+  onImageClick: () => void;
 }) => {
   const { addItem } = useCart();
 
@@ -671,7 +785,8 @@ const VariantCardMobile = ({
           <img
             src={variantImage}
             alt={variant.color || outfit.name}
-            className="w-full h-full object-cover"
+            onClick={onImageClick}
+            className="w-full h-full object-cover cursor-pointer"
           />
         </div>
 
@@ -736,12 +851,12 @@ const VariantCardMobile = ({
         </button>
 
         {!outOfStock && (
-<button
-  onClick={handleWhatsappOrder}
-  className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
->
-  <FaWhatsapp size={18} />
-</button>
+          <button
+            onClick={handleWhatsappOrder}
+            className="w-11 h-11 flex items-center justify-center rounded-xl border hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors duration-300"
+          >
+            <FaWhatsapp size={18} />
+          </button>
         )}
       </div>
     </motion.div>
@@ -757,6 +872,9 @@ const OutfitDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showColorNotice, setShowColorNotice] = useState(false);
+
+  // NEW: modal state for the glass image preview
+  const [modalImage, setModalImage] = useState<ModalImageData | null>(null);
 
   const variants = Array.isArray(outfit?.variants)
     ? outfit.variants
@@ -842,13 +960,32 @@ const OutfitDetail = () => {
     });
   };
 
+  // NEW: open the glass modal for the main product image
+  const openMainImageModal = () => {
+    setModalImage({
+      image: outfit.image,
+      title: outfit.name,
+      subtitle: outfit.color || undefined,
+    });
+  };
+
+  // NEW: open the glass modal for a given variant
+  const openVariantImageModal = (variant: Variant) => {
+    setModalImage({
+      image: variant.image || outfit.image,
+      title: outfit.name,
+      subtitle: variant.color || undefined,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
 
       <MobileBottomNav />
 
-   
+      {/* NEW: Glass image modal, shared across main + variant images */}
+      <ImageModal data={modalImage} onClose={() => setModalImage(null)} />
 
       <main className="pt-24 max-w-7xl mx-auto px-4 md:px-12 pb-24">
         <motion.button
@@ -866,6 +1003,7 @@ const OutfitDetail = () => {
             outfit={outfit}
             isLoved={isLoved}
             onToggleWishlist={handleToggleWishlist}
+            onImageClick={openMainImageModal}
           />
         )}
 
@@ -878,7 +1016,8 @@ const OutfitDetail = () => {
                   <img
                     src={outfit.image}
                     alt={outfit.name}
-                    className="w-full h-full object-cover"
+                    onClick={openMainImageModal}
+                    className="w-full h-full object-cover cursor-pointer"
                   />
 
                   <button
@@ -925,6 +1064,7 @@ const OutfitDetail = () => {
                       key={variant._id || variant.id}
                       variant={variant}
                       outfit={outfit}
+                      onImageClick={() => openVariantImageModal(variant)}
                     />
                   ))}
                 </div>
@@ -937,7 +1077,8 @@ const OutfitDetail = () => {
                 <img
                   src={outfit.image}
                   alt={outfit.name}
-                  className="w-full h-full object-cover"
+                  onClick={openMainImageModal}
+                  className="w-full h-full object-cover cursor-pointer"
                 />
 
                 <button
@@ -982,6 +1123,7 @@ const OutfitDetail = () => {
                     key={variant._id || variant.id}
                     variant={variant}
                     outfit={outfit}
+                    onImageClick={() => openVariantImageModal(variant)}
                   />
                 ))}
               </div>
