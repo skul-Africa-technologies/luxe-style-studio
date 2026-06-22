@@ -201,17 +201,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "ADD_ITEM", payload: { ...item, quantity: 1 } });
   };
 
-  const removeItem = (id: string, size?: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { id, size } });
-  };
+const removeItem = (
+  id: string,
+  size?: string,
+  color?: string
+) => {
+  dispatch({
+    type: "REMOVE_ITEM",
+    payload: {
+      id,
+      size,
+      color,
+    },
+  });
+};
 
-  const updateQuantity = (id: string, quantity: number, size?: string) => {
-    if (quantity < 1) {
-      removeItem(id, size);
-      return;
-    }
-    dispatch({ type: "UPDATE_QUANTITY", payload: { id, size, quantity } });
-  };
+const updateQuantity = (
+  id: string,
+  quantity: number,
+  size?: string,
+  color?: string
+) => {
+  if (quantity < 1) {
+    removeItem(id, size, color);
+    return;
+  }
+
+  dispatch({
+    type: "UPDATE_QUANTITY",
+    payload: {
+      id,
+      size,
+      color,
+      quantity,
+    },
+  });
+};
 
   const clearCart = () => dispatch({ type: "CLEAR_CART" });
   const toggleCart = () => dispatch({ type: "TOGGLE_CART" });
