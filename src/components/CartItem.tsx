@@ -5,6 +5,7 @@ import {
   useCart,
   parsePrice,
 } from "@/context/CartContext";
+import { glassCardStyle, glassBubbleStyle } from "@/lib/glass";
 
 interface CartItemProps {
   item: CartItemType;
@@ -59,10 +60,11 @@ const CartItem = ({ item }: CartItemProps) => {
   return (
     <motion.div
       layout
-      className="flex gap-4 p-4 bg-secondary/10 border border-border/50"
+      className="flex gap-4 p-4"
+      style={glassCardStyle}
     >
       {/* image */}
-      <div className="w-20 h-24 overflow-hidden">
+      <div className="w-20 h-24 overflow-hidden rounded-lg">
         <img
           src={item.image}
           className="w-full h-full object-cover"
@@ -70,39 +72,51 @@ const CartItem = ({ item }: CartItemProps) => {
       </div>
 
       {/* details */}
-      <div className="flex-1">
-        <h3>{item.name}</h3>
+      <div className="flex-1 text-white">
+        <h3 className="font-medium">{item.name}</h3>
 
-        <p>
+        <p className="text-sm text-white/70">
           {item.category} — {item.style}
         </p>
 
-        <p>
+        <p className="mt-1">
           ₦
           {itemTotal.toLocaleString()}
         </p>
 
         {/* controls */}
-        <div className="flex justify-between mt-3">
+        <div className="flex justify-between mt-3 items-center">
           <div className="flex gap-2 items-center">
-            <button onClick={handleDecrement}>
-              -
+            <button
+              onClick={handleDecrement}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-white/90"
+              style={glassBubbleStyle}
+              aria-label="Decrease quantity"
+            >
+              <Minus size={14} />
             </button>
 
-            <span>
+            <span className="w-6 text-center text-sm font-medium">
               {item.quantity}
             </span>
 
-            <button onClick={handleIncrement}>
-              +
+            <button
+              onClick={handleIncrement}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-white/90"
+              style={glassBubbleStyle}
+              aria-label="Increase quantity"
+            >
+              <Plus size={14} />
             </button>
           </div>
 
           <button
             onClick={handleRemove}
-            className="text-red-500"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-white/70 hover:text-white transition-colors"
+            style={glassBubbleStyle}
+            aria-label="Remove item"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>

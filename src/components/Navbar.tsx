@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
+import { glassStyle, glassBubbleStyle } from "@/lib/glass";
 
 const navLinks = [
   { label: "Contact", href: "#contact" },
@@ -20,15 +21,7 @@ const Navbar = () => {
       >
         <div
           className="max-w-7xl mx-auto px-5 md:px-8 flex items-center justify-between h-16 md:h-20 rounded-[28px] md:rounded-[32px]"
-          style={{
-            background:
-              "linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04))",
-            border: "1px solid rgba(255,255,255,0.22)",
-            backdropFilter: "blur(28px) saturate(180%)",
-            WebkitBackdropFilter: "blur(28px) saturate(180%)",
-            boxShadow:
-              "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)",
-          }}
+          style={glassStyle}
         >
           {/* Brand */}
           <a
@@ -68,14 +61,7 @@ const Navbar = () => {
             onClick={openCart}
             className="hidden md:flex relative w-11 h-11 md:w-12 md:h-12 rounded-full items-center justify-center text-foreground transition-colors"
             aria-label="Open cart"
-            style={{
-              background: "rgba(255,255,255,0.18)",
-              border: "1px solid rgba(255,255,255,0.3)",
-              backdropFilter: "blur(14px) saturate(180%)",
-              WebkitBackdropFilter: "blur(14px) saturate(180%)",
-              boxShadow:
-                "0 2px 10px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.5)",
-            }}
+            style={glassBubbleStyle}
           >
             <ShoppingBag size={19} />
 
