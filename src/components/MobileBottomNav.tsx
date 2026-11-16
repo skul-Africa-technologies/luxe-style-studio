@@ -9,7 +9,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { itemCount } = useCart();
+  const { itemCount, openCart } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
 
   if (!isMobile) return null;
@@ -18,17 +18,23 @@ const MobileBottomNav = () => {
     { label: "Home", icon: Home, path: "/" },
     { label: "Collection", icon: Grid3X3, path: "/#collection" },
     { label: "Loved", icon: Heart, path: "/wishlist", badge: wishlistCount },
-    { label: "Cart", icon: ShoppingBag, path: "/checkout", badge: itemCount },
+    { label: "Cart", icon: ShoppingBag, isCart: true, badge: itemCount },
   ];
 
-  const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
-    if (path.startsWith("/#"))
-      return location.pathname === "/" && location.hash === path.substring(1);
-    return location.pathname === path;
+  const isActive = (item: (typeof navItems)[number]) => {
+    if (item.isCart) return false;
+    if (item.path === "/") return location.pathname === "/";
+    if (item.path.startsWith("/#"))
+      return location.pathname === "/" && location.hash === item.path.substring(1);
+    return location.pathname === item.path;
   };
 
-  const handleClick = (path: string) => {
+  const handleClick = (item: (typeof navItems)[number]) => {
+    if (item.isCart) {
+      openCart();
+      return;
+    }
+    const path = item.path;
     if (path.startsWith("/#")) {
       if (location.pathname !== "/") {
         navigate("/");
@@ -64,19 +70,19 @@ const MobileBottomNav = () => {
             "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)",
         }}
       >
-        {navItems.map((item) => {
-          const active = isActive(item.path);
-          const Icon = item.icon;
+{navItems.map((item) => {
+            const active = isActive(item);
+            const Icon = item.icon;
 
-          return (
-            <motion.button
-              key={item.label}
-              whileTap={{ scale: 0.92 }}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => handleClick(item.path)}
-              className="relative flex items-center justify-center w-full h-full"
-              aria-label={item.label}
-            >
+            return (
+              <motion.button
+                key={item.label}
+                whileTap={{ scale: 0.92 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => handleClick(item)}
+                className="relative flex items-center justify-center w-full h-full"
+                aria-label={item.label}
+              >
               <motion.div
                 animate={{
                   scale: active ? 1.08 : 1,
